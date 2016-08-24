@@ -1,0 +1,3 @@
+[submodule "Assets/TinyJSON"]
+	path = Assets/TinyJSON
+	url = https://github.com/ByronMayne/TinyJSON.git
