@@ -1,3 +1,3 @@
 [submodule "Assets/TinyJSON"]
-	path = Assets/TinyJSON
+	path = proj.unity/Assets/TinyJSON
 	url = https://github.com/ByronMayne/TinyJSON.git
