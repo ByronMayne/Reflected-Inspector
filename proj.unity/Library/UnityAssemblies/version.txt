@@ -1,0 +1,8 @@
+5.4.0b22-HTP:2.2.0.0
+StandaloneWindows
+C:/Program Files/Unity_5.4.0b22/Editor/Data/Managed/UnityEngine.dll
+C:/Program Files/Unity_5.4.0b22/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll
+C:/Program Files/Unity_5.4.0b22/Editor/Data/UnityExtensions/Unity/Networking/UnityEngine.Networking.dll
+C:/Program Files/Unity_5.4.0b22/Editor/Data/UnityExtensions/Unity/UnityHoloLens/Runtime/UnityEngine.HoloLens.dll
+C:/Program Files/Unity_5.4.0b22/Editor/Data/UnityExtensions/Unity/UnityVR/Runtime/UnityEngine.VR.dll
+C:/Program Files/Unity_5.4.0b22/Editor/Data/Managed/UnityEditor.dll
