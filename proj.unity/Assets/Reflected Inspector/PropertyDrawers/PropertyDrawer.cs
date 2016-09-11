@@ -42,7 +42,7 @@ namespace ReflectedInspector
     //     ///
     //     The height in pixels.
     //     ///
-    public virtual float GetPropertyHeight(ReflectedProperty property, GUIContent label)
+    public virtual float GetPropertyHeight(ReflectedField property, GUIContent label)
     {
       return EditorGUIUtility.singleLineHeight;
     }
@@ -62,7 +62,7 @@ namespace ReflectedInspector
     //
     //   label:
     //     The label of this property.
-    public virtual void OnGUI(Rect position, ReflectedProperty property, GUIContent label)
+    public virtual void OnGUI(Rect position, ReflectedField property, GUIContent label)
     {
 
     }
