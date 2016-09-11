@@ -111,37 +111,14 @@ public class ReflectionHelpersSetTests
     }
 
     [Test(Description = "Sets a value on a child class that is null, this tests to make sure that class is created.")]
-    public void Test_AutoCreateChildClass()
-    {
-        Human human = new Human();
-        ReflectionHelper.SetFieldValue("m_Head.Thicknes", human, THICKNESS);
-        Assert.NotNull(human.GetHead(), "Last name was unable to be set correctly");
-    }
-
-    [Test(Description = "Sets a value on a child class that is null, this tests to make sure that class is created.")]
     public void Test_SetComplexObject()
     {
         Human human = new Human();
+        Head head = new Head();
         TColor color = new TColor();
+        ReflectionHelper.SetFieldValue("m_Head", human, head);
         ReflectionHelper.SetFieldValue("m_Head.m_HairColor", human, color);
         Assert.AreEqual(color, human.GetHead().GetColor(), "Color was unable to be set correctly");
-    }
-
-    [Test(Description = "Sets a value on a child class that is null, this tests to make sure that class is created.")]
-    public void Test_TwoChildrenDeep()
-    {
-        Human human = new Human();
-        ReflectionHelper.SetFieldValue("m_Head.m_HairColor.r", human, 0.25f);
-        Assert.AreEqual(0.25f, human.GetHead().GetColor().r, "Color was unable to set the alpha correctly be set correctly");
-    }
-
-    [Test(Description = "Sets a value on a child class that is null, this tests to make sure that class is created.")]
-    public void Test_AutoCreatedObjectSubObjectsStillNull()
-    {
-        Human human = new Human();
-        TColor color = new TColor();
-        ReflectionHelper.SetFieldValue("m_Head.m_HairColor", human, color);
-        Assert.IsNull(human.GetHead().GetEyePatch(), "Eyepatch should still be null");
     }
     #endregion
 
