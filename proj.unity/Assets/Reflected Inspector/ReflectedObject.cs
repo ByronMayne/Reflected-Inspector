@@ -176,7 +176,7 @@ public sealed class ReflectedObject
     {
         foreach (var reflectedField in m_Fields)
         {
-            if (string.CompareOrdinal(reflectedField.name, propertyPath) == 0)
+            if (string.CompareOrdinal(reflectedField.propertyPath, propertyPath) == 0)
             {
                 return reflectedField;
             }

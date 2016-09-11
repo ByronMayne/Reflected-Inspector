@@ -57,8 +57,6 @@ public sealed class ReflectedField
     [Include]
     private object m_Value;
     [Include]
-    private string m_Name;
-    [Include]
     private string m_Path;
     [Include]
     private string m_DisplayName;
@@ -96,14 +94,6 @@ public sealed class ReflectedField
     public string displayName
     {
         get { return m_DisplayName; }
-    }
-
-    /// <summary>
-    /// Gets the name of this property. (Read Only)
-    /// </summary>
-    public string name
-    {
-        get { return m_Name; }
     }
 
     /// <summary>
@@ -224,7 +214,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type int it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type int it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -235,7 +225,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type int it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type int it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -266,7 +256,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type long it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type long it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -277,7 +267,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type long it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type long it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -295,7 +285,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Integer it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Integer it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -306,7 +296,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type bool it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type bool it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -324,7 +314,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type float it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type float it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -335,7 +325,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type float it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type float it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -353,7 +343,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type double it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type double it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -364,7 +354,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type double it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type double it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -382,7 +372,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type string it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type string it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -393,7 +383,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type string it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type string it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -411,7 +401,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type color it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type color it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -422,7 +412,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type color it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type color it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -440,7 +430,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type animation curve it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type animation curve it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -451,7 +441,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type animation curve it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type animation curve it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -469,7 +459,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type gradient  it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type gradient  it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -480,7 +470,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type gradient it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type gradient it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -498,7 +488,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Object it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Object it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -509,7 +499,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Object it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Object it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -527,7 +517,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type enum it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type enum it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -538,13 +528,13 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type enum it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type enum it's a " + m_PropertyType.ToString());
             }
         }
     }
 
     /// <summary>
-    /// Display-friendly names of enumeration of an enum property.
+    /// Display-friendly m_DisplayNames of enumeration of an enum property.
     /// </summary>
     public string[] enumNames
     {
@@ -565,7 +555,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Vector2 it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Vector2 it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -576,10 +566,11 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Vector2 it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Vector2 it's a " + m_PropertyType.ToString());
             }
         }
     }
+
     /// <summary>
     /// Value of the #D vector property.
     /// </summary>
@@ -593,7 +584,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Vector3 it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Vector3 it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -604,10 +595,11 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Vector3 it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Vector3 it's a " + m_PropertyType.ToString());
             }
         }
     }
+
     /// <summary>
     /// Value of the 4D vector property.
     /// </summary>
@@ -621,7 +613,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Vector4 it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Vector4 it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -632,7 +624,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Vector4 it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Vector4 it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -650,7 +642,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Quaternion it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Quaternion it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -661,7 +653,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Quaternion it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Quaternion it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -679,7 +671,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Rect it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Rect it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -690,7 +682,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Rect it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Rect it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -708,7 +700,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Bounds it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Bounds it's a " + m_PropertyType.ToString());
             }
         }
         set
@@ -719,7 +711,7 @@ public sealed class ReflectedField
             }
             else
             {
-                throw new System.InvalidCastException(name + " is not of type Bounds it's a " + m_PropertyType.ToString());
+                throw new System.InvalidCastException(m_DisplayName + " is not of type Bounds it's a " + m_PropertyType.ToString());
             }
         }
     }
@@ -840,20 +832,18 @@ public sealed class ReflectedField
 
         if (index > 0)
         {
-            m_Name = path.Substring(index, path.Length - index);
+            m_DisplayName = path.Substring(index, path.Length - index);
         }
         else
         {
-            m_Name = path;
+            m_DisplayName = path;
         }
 
-        m_Name = m_Name.Replace("[", "");
-        m_Name = m_Name.Replace("]", "");
 
         m_Path = path;
         m_PropertyType = type;
         m_ValueType = systemType;
-        m_DisplayName = UnityEditor.ObjectNames.NicifyVariableName(m_Name);
+        m_DisplayName = UnityEditor.ObjectNames.NicifyVariableName(m_DisplayName);
         m_Children = new List<ReflectedField>();
 
         object instanceValue = m_ReflectedObject.LoadValue(this);
@@ -927,6 +917,7 @@ public sealed class ReflectedField
 
                     m_ArraySize++;
                 }
+                UpdateArrayElementNames();
             }
         }
     }
@@ -999,7 +990,6 @@ public sealed class ReflectedField
         clone.m_ReflectedObject = m_ReflectedObject;
         clone.m_ValueType = m_ValueType;
         clone.m_ValueTrueType = m_ValueTrueType;
-        clone.m_Name = m_Name;
         clone.m_DisplayName = m_DisplayName;
         clone.m_IsExplanded = false;
         clone.m_Path = m_Path;
@@ -1169,15 +1159,24 @@ public sealed class ReflectedField
             {
                 // Mostly likely a list, HashSet, or LinkedList
                 elementType = m_ValueType.GetGenericArguments()[0];
-                child = new ReflectedField(m_ReflectedObject, GetReflectedFieldType(elementType), elementType, SequenceHelper.AppendListEntryToSequence(propertyPath, index));
+                child = new ReflectedField(m_ReflectedObject, GetReflectedFieldType(elementType), elementType, string.Empty /* Is assigned in the next function */);
             }
         }
 
-        child.m_Name = SequenceHelper.AppendListEntryToSequence(propertyPath, index + 1);
-        child.m_DisplayName = "Element " + index.ToString() + " [" + child.valueTrueType.Name + "]";
         m_ArraySize++;
         m_Children.Add(child);
+        UpdateArrayElementNames();
         return child;
+    }
+
+    private void UpdateArrayElementNames()
+    {
+        for(int i = 0; i < m_Children.Count; i++)
+        {
+            var child = m_Children[i];
+            child.m_Path = SequenceHelper.AppendListEntryToSequence(propertyPath, i);
+            child.m_DisplayName = "Element " + i.ToString() + " [" + child.valueTrueType.Name + "]";
+        }
     }
 
     /// <summary>
@@ -1187,6 +1186,7 @@ public sealed class ReflectedField
     {
         m_Children.RemoveAt(index);
         m_ArraySize--;
+        UpdateArrayElementNames();
     }
 
     /// <summary>
@@ -1460,6 +1460,6 @@ public sealed class ReflectedField
   
     public override string ToString()
     {
-        return m_Name + " || " + "{Path} = " + m_Path + " {Type} = " + propertyType.ToString();
+        return m_DisplayName + " || " + "{Path} = " + m_Path + " {Type} = " + propertyType.ToString();
     }
 }
