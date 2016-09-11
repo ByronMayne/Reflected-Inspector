@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 using System.IO;
 using TinyJSON;
 using ReflectedInspector;
+using System.Text;
 //
 // Summary:
 //     ///
@@ -188,7 +189,6 @@ public sealed class ReflectedField
 
     internal void SaveModifications()
     {
-        Debug.Log("Saving: " + propertyPath);
         m_ReflectedObject.SaveValue(this);
 
         for (int i = 0; i < m_Children.Count; i++)
@@ -880,6 +880,7 @@ public sealed class ReflectedField
         {
             // Check for polymorphic type. 
             m_ValueTrueType = instanceValue.GetType();
+            m_Value = instanceValue;
         }
         else
         {
@@ -1339,7 +1340,7 @@ public sealed class ReflectedField
                 EditorGUI.BeginDisabledGroup(m_PropertyType != ReflectedFieldType.Null);
                 if (GUILayout.Button("+", EditorStyles.miniButtonLeft, GUILayout.ExpandWidth(false)))
                 {
-                    OnElementAdded();
+                    OnElementCreated();
                 }
                 EditorGUI.EndDisabledGroup();
 
@@ -1424,7 +1425,7 @@ public sealed class ReflectedField
         m_Children.Clear();
     }
 
-    private void OnElementAdded()
+    private void OnElementCreated()
     {
         if (m_ValueType == typeof(string))
         {
@@ -1441,4 +1442,24 @@ public sealed class ReflectedField
 
 
 #endif
+
+    public void AppendInfo(StringBuilder builder, int indent)
+    {
+        for(int i = 0; i < indent; i++)
+        {
+            builder.Append(' ');
+        }
+
+        builder.AppendLine(ToString());
+
+        for(int i = 0; i < m_Children.Count; i++)
+        {
+            m_Children[i].AppendInfo(builder, indent++);
+        }
+    }
+  
+    public override string ToString()
+    {
+        return m_Name + " || " + "{Path} = " + m_Path + " {Type} = " + propertyType.ToString();
+    }
 }

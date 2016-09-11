@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using ReflectedInspector;
+using System.Text;
 
 /// <summary>
 ///   <para>ReflectedObject and ReflectedField are classes for editing
@@ -101,7 +102,7 @@ public sealed class ReflectedObject
     {
         for (int i = 0; i < m_Targets.Length; i++)
         {
-            ReflectionHelper.SetFieldValue(property.propertyPath, m_Targets[i], property.rawValue);
+            ReflectionHelper.SetFieldValue(property.propertyPath, m_Targets[0], property.rawValue);
         }
     }
 
@@ -204,6 +205,16 @@ public sealed class ReflectedObject
     public void CopyReflectedField(ReflectedField prop)
     {
 
+    }
+
+    public void Print()
+    {
+        StringBuilder builder = new StringBuilder();
+        foreach (var child in m_Fields)
+        {
+            child.AppendInfo(builder, 0);
+        }
+        Debug.Log(builder.ToString());
     }
 
 }

@@ -46,6 +46,15 @@ public static class ReflectionHelper
                 // Get our index
                 int index = SequenceHelper.GetArrayIndex(entries[i]);
 
+                if( list.Count <= index )
+                {
+                    // We are out of range we we just create a new instance.
+                    wasSuccessful = false;
+                    object newValue = GetDefault(list.GetType().GetGenericArguments()[0]);
+
+                    return newValue;
+                }
+
                 // Load our value
                 @object = list[index];
             }
@@ -107,34 +116,42 @@ public static class ReflectionHelper
 
                 if (list == null)
                 {
-                    throw new System.InvalidCastException("Object of type: " + @object.ToString() + " does not inheirt IList");
+                    throw new System.InvalidCastException("Object of type: " + @object.ToString() + " does not inherit IList");
                 }
 
                 // Get our index
                 int index = SequenceHelper.GetArrayIndex(entries[i]);
 
+                Type itemType = GetElementType(@object.GetType());
 
-                int diff = index - list.Count + 1;
-
-                Type itemType = @object.GetType().GetGenericArguments()[0];
-
-                // We have to resize our array since it's too small.
-                for (int d = 0; d < diff; d++)
-                {
-                    object newEntry = GetDefault(itemType);
-                    list.Add(newEntry);
-                }
-
- 
+                UnityEngine.Debug.Log("Saving List Type: " + @object.GetType().Name);
 
                 if (i == entries.Length - 1)
                 {
-                    // Load our value
-                    list[index] = value;
+                    if( index >= list.Count )
+                    {
+                        UnityEngine.Debug.Log("fieldSequence: " + fieldSequence);
+                        // TODO: This has a chance of reordering a list which is not ideal. Add would throw 
+                        // an exception if the value was null which sucked.
+                        list.Add(value);
+                    }
+                    else
+                    {
+                        // Load our value
+                        list[index] = value;
+                    }
                 }
                 else
                 {
-                    @object = list[index];
+                    if( index >= list.Count )
+                    {
+                        // We are at a sub object that has no idex that is valid.
+                        return;
+                    }
+                    else
+                    {
+                        @object = list[index];
+                    }
                 }
             }
             else
@@ -166,11 +183,8 @@ public static class ReflectionHelper
                     // If we are not on the last loop and we have a null.
                     if (subObject == null && i < entries.Length - 1)
                     {
-                        // Create a new instance
-                        subObject = FormatterServices.GetUninitializedObject(fieldInfo.FieldType);
-
-                        // Set our current value
-                        fieldInfo.SetValue(@object, subObject);
+                        // Our parent is null so we can't be set
+                        throw new System.ArgumentNullException("The field at path '" + fieldSequence + "' has a parent that is null. Values can be set on nested types that are null. Please make sure the parent has a field property that is set first");
                     }
 
                     // Continue on with our current value
@@ -185,6 +199,18 @@ public static class ReflectionHelper
             }
         }
 
+    }
+
+    public static Type GetElementType(object listObject)
+    {
+        Type type = listObject.GetType();
+
+        if( typeof(IList).IsAssignableFrom(type))
+        {
+            Type elementType = type.GetElementType();
+            return type.GetGenericArguments()[0];
+        }
+        return null;
     }
 
     public static object GetDefault(Type type)
