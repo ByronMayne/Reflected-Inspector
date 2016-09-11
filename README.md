@@ -1,4 +1,4 @@
- [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://github.com/ByronMayne/TinyJSON/blob/master/LICENSE.md)
+ [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://github.com/ByronMayne/Reflected-Inspector/blob/master/LICENSE)
  
 # Reflected Inspector
 
