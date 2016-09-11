@@ -177,7 +177,7 @@ public sealed class ReflectedObject
     /// Finds a reflected property by name that is a part of the reflected object.
     /// </summary>
     /// <returns></returns>
-    public ReflectedField FindProperty(string propertyPath)
+    public ReflectedField FindField(string propertyPath)
     {
         return null;
     }
@@ -186,7 +186,7 @@ public sealed class ReflectedObject
     /// Applies all pending modifications for each property. Returns true if any
     /// modifications were made. 
     /// </summary>
-    public void ApplyModifiedProperties()
+    public void ApplyModifiedFields()
     {
         foreach (var property in m_Properties)
         {

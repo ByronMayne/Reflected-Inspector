@@ -12,7 +12,7 @@ public class RelfectedBehaviourEditor : Editor
 
   public void OnDisable()
   {
-    m_ReflectedObject.ApplyModifiedProperties();
+    m_ReflectedObject.ApplyModifiedFields();
   }
 
   public override void OnInspectorGUI()

@@ -1023,7 +1023,7 @@ public sealed class ReflectedField
     ///   <para>Retrieves the SerializedProperty at a relative path to the current property.</para>
     /// </summary>
     /// <param name="relativePropertyPath"></param>
-    public ReflectedField FindPropertyRelative(string relativePropertyPath)
+    public ReflectedField FindFieldRelative(string relativePropertyPath)
     {
         ReflectedField serializedProperty = this.Copy();
         //TODO: Find
@@ -1197,7 +1197,7 @@ public sealed class ReflectedField
 
     internal void SetToValueOfTarget(UnityEngine.Object target)
     {
-        ReflectedField serializedProperty = new ReflectedObject(target).FindProperty(this.propertyPath);
+        ReflectedField serializedProperty = new ReflectedObject(target).FindField(this.propertyPath);
         if (serializedProperty == null)
         {
             UnityEngine.Debug.LogError(target.name + " does not have the property " + this.propertyPath);
@@ -1408,7 +1408,7 @@ public sealed class ReflectedField
                             m_PropertyType = GetReflectedFieldType(selectedType);
                             m_ValueTrueType = selectedType;
                         }
-                        LoadChildren(m_Value);
+                        LoadChildren(m_Value);ayou
                     }
                   );
                     menu.ShowAsContext();
