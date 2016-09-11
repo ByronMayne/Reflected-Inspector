@@ -124,13 +124,10 @@ public static class ReflectionHelper
 
                 Type itemType = GetElementType(@object.GetType());
 
-                UnityEngine.Debug.Log("Saving List Type: " + @object.GetType().Name);
-
                 if (i == entries.Length - 1)
                 {
                     if( index >= list.Count )
                     {
-                        UnityEngine.Debug.Log("fieldSequence: " + fieldSequence);
                         // TODO: This has a chance of reordering a list which is not ideal. Add would throw 
                         // an exception if the value was null which sucked.
                         list.Add(value);
