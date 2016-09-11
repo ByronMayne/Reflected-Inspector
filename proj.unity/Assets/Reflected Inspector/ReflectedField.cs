@@ -909,9 +909,22 @@ public sealed class ReflectedField
             {
                 foreach (var item in list)
                 {
-                    ReflectedFieldType propertyType = GetReflectedFieldType(item.GetType());
+                    ReflectedFieldType propertyType;
+                    Type itemType = null;
 
-                    ReflectedField newProperty = new ReflectedField(m_ReflectedObject, propertyType, item.GetType(), SequenceHelper.AppendListEntryToSequence(propertyPath, m_Children.Count));
+                    if ( item == null )
+                    {
+                        propertyType = ReflectedFieldType.Null;
+                        itemType = ReflectionHelper.GetElementType(instanceValue);
+                    }
+                    else
+                    {
+                        propertyType = GetReflectedFieldType(item.GetType());
+                        itemType = item.GetType();
+                    }
+                 
+
+                    ReflectedField newProperty = new ReflectedField(m_ReflectedObject, propertyType, itemType, SequenceHelper.AppendListEntryToSequence(propertyPath, m_Children.Count));
 
                     m_Children.Add(newProperty);
 

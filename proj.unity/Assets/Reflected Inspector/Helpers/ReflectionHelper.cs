@@ -153,6 +153,7 @@ public static class ReflectionHelper
             }
             else
             {
+
                 // Load our type  
                 type = @object.GetType();
 
@@ -193,6 +194,14 @@ public static class ReflectionHelper
                         fieldInfo.SetValue(@object, value);
                     }
                 }
+
+                // Our current object is null so we set our current position to null and break.
+                if (@object == null)
+                {
+                    fieldInfo.SetValue(@object, null);
+                    return;
+                }
+
             }
         }
 
