@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using ReflectedInspector;
 
 /// <summary>
 ///   <para>ReflectedObject and ReflectedField are classes for editing
@@ -123,13 +124,6 @@ public sealed class ReflectedObject
         }
 
         return rhsValue;
-    }
-
-    private int GetArrayIndex(string path)
-    {
-        path = path.Replace("[", "");
-        path = path.Replace("]", "");
-        return int.Parse(path);
     }
 
     /// <summary>

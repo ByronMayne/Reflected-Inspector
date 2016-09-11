@@ -1408,7 +1408,7 @@ public sealed class ReflectedField
                             m_PropertyType = GetReflectedFieldType(selectedType);
                             m_ValueTrueType = selectedType;
                         }
-                        LoadChildren(m_Value);ayou
+                        LoadChildren(m_Value);
                     }
                   );
                     menu.ShowAsContext();
