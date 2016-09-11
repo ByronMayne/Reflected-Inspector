@@ -16,7 +16,7 @@ public sealed class ReflectedObject
 
     private object[] m_Targets;
     private bool m_HasModifiedProperites;
-    private HashSet<ReflectedField> m_Properties;
+    private HashSet<ReflectedField> m_Fields;
 
     /// <summary>
     ///   <para>The inspected object (Read Only).</para>
@@ -76,7 +76,7 @@ public sealed class ReflectedObject
     /// </summary>
     public ReflectedObject(object[] objs)
     {
-        m_Properties = new HashSet<ReflectedField>();
+        m_Fields = new HashSet<ReflectedField>();
 
         m_Targets = objs;
 
@@ -92,13 +92,13 @@ public sealed class ReflectedObject
 
             ReflectedField newProperty = new ReflectedField(this, propertyType, fileds[i].FieldType, fileds[i].Name);
 
-            m_Properties.Add(newProperty);
+            m_Fields.Add(newProperty);
         }
     }
 
     internal void SaveValue(ReflectedField property)
     {
-        for(int i = 0; i < m_Targets.Length; i++)
+        for (int i = 0; i < m_Targets.Length; i++)
         {
             ReflectionHelper.SetFieldValue(property.propertyPath, m_Targets[i], property.rawValue);
         }
@@ -113,9 +113,9 @@ public sealed class ReflectedObject
 
         for (int i = 1; i < m_Targets.Length; i++)
         {
-            lhsValue = ReflectionHelper.GetFieldValue(property.propertyPath, m_Targets[0]); 
+            lhsValue = ReflectionHelper.GetFieldValue(property.propertyPath, m_Targets[0]);
 
-            if( lhsValue != rhsValue )
+            if (lhsValue != rhsValue)
             {
                 hasMixedValues = true;
                 break;
@@ -142,7 +142,7 @@ public sealed class ReflectedObject
 
     public void DoLayout()
     {
-        foreach (var property in m_Properties)
+        foreach (var property in m_Fields)
         {
             property.DoLayout();
         }
@@ -179,6 +179,13 @@ public sealed class ReflectedObject
     /// <returns></returns>
     public ReflectedField FindField(string propertyPath)
     {
+        foreach (var reflectedField in m_Fields)
+        {
+            if (string.CompareOrdinal(reflectedField.name, propertyPath) == 0)
+            {
+                return reflectedField;
+            }
+        }
         return null;
     }
 
@@ -188,7 +195,7 @@ public sealed class ReflectedObject
     /// </summary>
     public void ApplyModifiedFields()
     {
-        foreach (var property in m_Properties)
+        foreach (var property in m_Fields)
         {
             for (int i = 0; i < m_Targets.Length; i++)
             {
