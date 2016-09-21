@@ -14,6 +14,7 @@ using System.Text;
 /// </summary>
 public sealed class ReflectedObject
 {
+
     private IntPtr m_Property;
 
     private object[] m_Targets;
@@ -111,11 +112,13 @@ public sealed class ReflectedObject
         bool hasMixedValues = false;
         object lhsValue = null, rhsValue = null;
 
-        rhsValue = ReflectionHelper.GetFieldValue(property.propertyPath, m_Targets[0]);
+        bool wasSuccessful = false;
+        Type fieldType = null;
+        rhsValue = ReflectionHelper.GetFieldValue(property.propertyPath, m_Targets[0], out wasSuccessful, out fieldType);
 
         for (int i = 1; i < m_Targets.Length; i++)
         {
-            lhsValue = ReflectionHelper.GetFieldValue(property.propertyPath, m_Targets[0]);
+            lhsValue = ReflectionHelper.GetFieldValue(property.propertyPath, m_Targets[0], out wasSuccessful, out fieldType);
 
             if (lhsValue != rhsValue)
             {

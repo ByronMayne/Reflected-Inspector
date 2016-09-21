@@ -11,14 +11,24 @@ public static class ReflectionHelper
 {
     public static readonly BindingFlags INSTANCE_BINDING_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
-    public static object GetFieldValue(string fieldSequence, object @object)
+    public static T GetFieldValue<T>(string fieldSequence, object @object)
     {
         bool wasSuccessful = false;
-        return GetFieldValue(fieldSequence, @object, out wasSuccessful);
+        Type fieldType = null;
+        object value = GetFieldValue(fieldSequence, @object, out wasSuccessful, out fieldType);
+
+        if( value == null && typeof(T).IsValueType)
+        {
+            value = default(T);
+        }
+        return (T)System.Convert.ChangeType(value, typeof(T));
     }
 
-    public static object GetFieldValue(string fieldSequence, object @object, out bool wasSuccessful)
+
+    public static object GetFieldValue(string fieldSequence, object @object, out bool wasSuccessful, out Type fieldType)
     {
+        fieldType = null;
+
         // We can't work if we don't have a root object.
         if (@object == null)
         {
@@ -48,15 +58,34 @@ public static class ReflectionHelper
 
                 if( list.Count <= index )
                 {
-                    // We are out of range we we just create a new instance.
+                    // We are out of range we just create a new instance.
                     wasSuccessful = false;
-                    object newValue = GetDefault(list.GetType().GetGenericArguments()[0]);
-
+                    fieldType = GetElementType(list);
+                    object newValue = GetDefault(fieldType);
+                    fieldType = GetElementType(list);
                     return newValue;
                 }
 
                 // Load our value
                 @object = list[index];
+            }
+            else if( SequenceHelper.IsDictionaryPath(entries[i]))
+            {
+                IDictionary dictionary = @object as IDictionary;
+
+                string key = SequenceHelper.GetDictionaryKey(entries[i]);
+
+                if (dictionary.Contains(key))
+                {
+                    @object = dictionary[key];
+                    wasSuccessful = true;
+                    return @object;
+                }
+                else
+                {
+                    wasSuccessful = false;
+                    return null; 
+                }
             }
             else // Not an array path
             {
@@ -76,6 +105,7 @@ public static class ReflectionHelper
 
                 // Load the value from our field.
                 @object = fieldInfo.GetValue(@object);
+                fieldType = fieldInfo.FieldType;
             }
 
             // If we are not on the last loop and we have a null.
@@ -83,6 +113,7 @@ public static class ReflectionHelper
             {
                 // Some object along the way was null. 
                 wasSuccessful = false;
+                fieldType = null;
                 return @object;
             }
         }
@@ -106,10 +137,8 @@ public static class ReflectionHelper
         // Break up the path (zero periods is also valid)
         string[] entries = fieldSequence.Split(Constants.PATH_SEPARATOR);
 
-
         for (int i = 0; i < entries.Length; i++)
         {
-
             if (SequenceHelper.IsArrayPath(entries[i]))
             {
                 IList list = @object as IList;

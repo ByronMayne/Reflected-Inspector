@@ -6,14 +6,14 @@ using UnityEditor;
 [System.Serializable]
 public class Person
 {
-  private int m_Age;
-  private string m_Name;
-  private string m_LastName; 
+    private int m_Age;
+    private string m_Name;
+    private string m_LastName;
 }
 
 public class BayWindow : Window
 {
-  public float m_PanelCount = 3;
+    public float m_PanelCount = 3;
 }
 
 
@@ -21,35 +21,41 @@ public class BayWindow : Window
 public class Window
 {
     [SerializeField]
-  protected Vector2 m_Size;
-  protected bool m_IsOpen;
+    protected Vector2 m_Size;
+    protected bool m_IsOpen;
 }
 [System.Serializable]
 public struct Door
 {
-  public bool isOpen;
-  public Color color;
+    public bool isOpen;
+    public Color color;
 }
 
 
 public class House : ReflectedBehaviour
 {
+    //[System.NonSerialized]
+    //
+    //private HashSet<Person> m_Occupents;
+    //public string address = "123 Fake Street";
+    //public ICollection<Door> m_Doors = new List<Door>();
+    //private Dictionary<string, string> m_Dictionary = new Dictionary<string, string>();
 
-    private List<Window> m_Windows = new List<Window>() { new Window() };
-  //private HashSet<Person> m_Occupents;
-  //public string address = "123 Fake Street";
-  //public ICollection<Door> m_Doors = new List<Door>();
+    //public List<string> m_Names = new List<string>()
+    //{
+    //  "Byron",
+    //  "Mayne"
+    //};
 
-  //public List<string> m_Names = new List<string>()
-  //{
-  //  "Byron",
-  //  "Mayne"
-  //};
+    private string m_Name = "Byron";
+    private int m_Age;
+    private bool m_IsAlive;
+    private float m_Length;
+    [System.NonSerialized]
+    public Door m_Door;
+    [System.NonSerialized]
+    public Window m_Window;
 
-    public void OnEnable()
-    {
-        SerializedObject ser = new SerializedObject(this);
-        Debug.Log(ser.FindProperty("m_Windows").GetArrayElementAtIndex(0).FindPropertyRelative("m_Size").propertyPath);
-    }
 
+    //private List<Window> m_Windows = new List<Window>();
 }

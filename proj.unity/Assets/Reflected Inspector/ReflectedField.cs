@@ -38,6 +38,8 @@ public enum ReflectedFieldType
     Quaternion = 17,
     BitwiseFlag = 18,
     IList = 19,
+    IDictionary = 20,
+    KeyValuePair = 21,
     Null,
 }
 
@@ -63,7 +65,7 @@ public sealed class ReflectedField
     [Exclude]
     private bool m_IsExplanded = false;
     [Include]
-    private int m_ArraySize;
+    private int m_ElementCount;
     [Include]
     private List<ReflectedField> m_Children;
     [Include]
@@ -201,6 +203,18 @@ public sealed class ReflectedField
         get { return m_PropertyType; }
     }
 
+    public object rawValue
+    {
+        get
+        {
+            return m_Value;
+        }
+        set
+        {
+            m_Value = value;
+        }
+    }
+
     /// <summary>
     /// Value of this integer property
     /// </summary>
@@ -229,19 +243,6 @@ public sealed class ReflectedField
             }
         }
     }
-
-    public object rawValue
-    {
-        get
-        {
-            return m_Value;
-        }
-        set
-        {
-            m_Value = value;
-        }
-    }
-
 
     /// <summary>
     /// Value of this long property
@@ -725,6 +726,14 @@ public sealed class ReflectedField
     }
 
     /// <summary>
+    /// Returns true if type is a dictionary false if not. (Read Only)
+    /// </summary>
+    public bool isDictionary
+    {
+        get { return m_PropertyType == ReflectedFieldType.IDictionary; }
+    }
+
+    /// <summary>
     /// The number of elements in the array. If the ReflectedObject
     /// contains multiple objects it will return the smallest number of elements. 
     /// So it is always possible to iterate through the ReflectedObject and 
@@ -740,7 +749,7 @@ public sealed class ReflectedField
             }
             else
             {
-                return m_ArraySize;
+                return m_ElementCount;
             }
         }
         set
@@ -756,9 +765,9 @@ public sealed class ReflectedField
                     value = 0;
                 }
 
-                if (m_ArraySize != value)
+                if (m_ElementCount != value)
                 {
-                    int differnce = value - m_ArraySize;
+                    int differnce = value - m_ElementCount;
 
                     if (differnce > 0)
                     {
@@ -801,6 +810,7 @@ public sealed class ReflectedField
                 case ReflectedFieldType.Bounds:
                 case ReflectedFieldType.Quaternion:
                 case ReflectedFieldType.BitwiseFlag:
+                case ReflectedFieldType.KeyValuePair:
                     return true;
                 case ReflectedFieldType.Gradient:
                 case ReflectedFieldType.String:
@@ -809,6 +819,7 @@ public sealed class ReflectedField
                 case ReflectedFieldType.ObjectReference:
                 case ReflectedFieldType.AnimationCurve:
                 case ReflectedFieldType.IList:
+                case ReflectedFieldType.IDictionary:
                 default:
                     return false;
             }
@@ -874,12 +885,15 @@ public sealed class ReflectedField
         }
         else
         {
-            m_Value = null;
-            m_ValueTrueType = m_ValueType;
-            m_PropertyType = ReflectedFieldType.Null;
+            if(m_PropertyType != ReflectedFieldType.KeyValuePair)
+            {
+                m_Value = null;
+                m_ValueTrueType = m_ValueType;
+                m_PropertyType = ReflectedFieldType.Null;
+            }
         }
 
-        LoadChildren(instanceValue);
+        LoadChildren(m_Value);
     }
 
     private void LoadChildren(object instanceValue)
@@ -903,7 +917,7 @@ public sealed class ReflectedField
         {
             IList list = (IList)instanceValue;
 
-            m_ArraySize = 0;
+            m_ElementCount = 0;
 
             if (list != null)
             {
@@ -912,7 +926,7 @@ public sealed class ReflectedField
                     ReflectedFieldType propertyType;
                     Type itemType = null;
 
-                    if ( item == null )
+                    if (item == null)
                     {
                         propertyType = ReflectedFieldType.Null;
                         itemType = ReflectionHelper.GetElementType(instanceValue);
@@ -922,16 +936,81 @@ public sealed class ReflectedField
                         propertyType = GetReflectedFieldType(item.GetType());
                         itemType = item.GetType();
                     }
-                 
 
-                    ReflectedField newProperty = new ReflectedField(m_ReflectedObject, propertyType, itemType, SequenceHelper.AppendListEntryToSequence(propertyPath, m_Children.Count));
 
-                    m_Children.Add(newProperty);
-
-                    m_ArraySize++;
+                    ReflectedField arrayEntry = new ReflectedField(m_ReflectedObject, propertyType, itemType, SequenceHelper.AppendListEntryToSequence(propertyPath, m_Children.Count));
+                    m_Children.Add(arrayEntry);
+                    m_ElementCount++;
                 }
                 UpdateArrayElementNames();
             }
+        }
+        else if (m_PropertyType == ReflectedFieldType.IDictionary)
+        {
+            IDictionary dict = (IDictionary)instanceValue;
+
+            m_ElementCount = 0;
+
+            if (dict != null)
+            {
+                Type dictType = dict.GetType();
+                Type keyType = dictType.GetGenericArguments()[0];
+                Type valueType = dictType.GetGenericArguments()[1];
+
+                // Our keys can only be of type string. Some day we will add UnityEngine.Object along with other types but that is not today. 
+                if (keyType != typeof(string))
+                {
+                    return;
+                }
+
+                foreach (DictionaryEntry entry in dict)
+                {
+                    ReflectedField dictEntry = new ReflectedField(m_ReflectedObject, ReflectedFieldType.KeyValuePair, typeof(DictionaryEntry), SequenceHelper.AppendDictionaryEntryToSequence(propertyPath, m_Children.Count));
+                    m_Children.Add(dictEntry);
+                    m_ElementCount++;
+                }
+            }
+        }
+        else if (m_PropertyType == ReflectedFieldType.KeyValuePair)
+        {
+            Type[] arguements = m_ValueType.GetGenericArguments();
+            Type keyType = arguements[0];
+            Type valueType = arguements[1];
+            DictionaryEntry entry = (DictionaryEntry)instanceValue;
+            ReflectedFieldType keyPropertyType = ReflectedFieldType.Null;
+
+            if (entry.Key != null)
+            {
+                keyType = entry.Key.GetType();
+                keyPropertyType = GetReflectedFieldType(entry.Key.GetType());
+            }
+            else
+            {
+
+            }
+
+            ReflectedField keyField = new ReflectedField(m_ReflectedObject, keyPropertyType, keyType, SequenceHelper.AppendListEntryToSequence(propertyPath, m_Children.Count));
+            keyField.m_ValueTrueType = keyType;
+            m_Children.Add(keyField);
+            keyField.m_DisplayName = "Key";
+            m_ElementCount++;
+
+
+            ReflectedFieldType valuePropertyType = ReflectedFieldType.Null;
+
+            if (entry.Value != null)
+            {
+                valueType = entry.Value.GetType();
+                valuePropertyType = GetReflectedFieldType(valueType);
+            }
+
+            ReflectedField valueField = new ReflectedField(m_ReflectedObject, valuePropertyType, valueType, SequenceHelper.AppendListEntryToSequence(propertyPath, m_Children.Count));
+            valueField.m_DisplayName = "Value";
+            valueField.m_ValueTrueType = m_ValueType;
+            m_Children.Add(keyField);
+            m_ElementCount++;
+
+            UpdateArrayElementNames();
         }
     }
 
@@ -1007,7 +1086,7 @@ public sealed class ReflectedField
         clone.m_IsExplanded = false;
         clone.m_Path = m_Path;
         clone.m_Value = m_Value;
-        clone.m_ArraySize = m_ArraySize;
+        clone.m_ElementCount = m_ElementCount;
 
         CopyChildren(this, clone);
 
@@ -1067,9 +1146,13 @@ public sealed class ReflectedField
         {
             propertyType = ReflectedFieldType.String;
         }
-        else if (typeof(IEnumerable).IsAssignableFrom(type))
+        else if (typeof(IList).IsAssignableFrom(type))
         {
             propertyType = ReflectedFieldType.IList;
+        }
+        else if (typeof(IDictionary).IsAssignableFrom(type))
+        {
+            propertyType = ReflectedFieldType.IDictionary;
         }
         else if (type == typeof(bool))
         {
@@ -1168,23 +1251,29 @@ public sealed class ReflectedField
             {
                 // Normal Array
             }
-            else if (m_ValueType.IsGenericType)
+            else if (isDictionary)
+            {
+                // Mostly likely a list, HashSet, or LinkedList
+                child = new ReflectedField(m_ReflectedObject, ReflectedFieldType.KeyValuePair, m_ValueType, SequenceHelper.AppendDictionaryEntryToSequence(propertyPath, m_ElementCount++));
+                m_Children.Add(child);
+                m_ElementCount++;
+            }
+            else if (isArray)
             {
                 // Mostly likely a list, HashSet, or LinkedList
                 elementType = m_ValueType.GetGenericArguments()[0];
                 child = new ReflectedField(m_ReflectedObject, GetReflectedFieldType(elementType), elementType, string.Empty /* Is assigned in the next function */);
+                m_Children.Add(child);
+                UpdateArrayElementNames();
+                m_ElementCount++;
             }
         }
-
-        m_ArraySize++;
-        m_Children.Add(child);
-        UpdateArrayElementNames();
         return child;
     }
 
     private void UpdateArrayElementNames()
     {
-        for(int i = 0; i < m_Children.Count; i++)
+        for (int i = 0; i < m_Children.Count; i++)
         {
             var child = m_Children[i];
             child.m_Path = SequenceHelper.AppendListEntryToSequence(propertyPath, i);
@@ -1198,7 +1287,7 @@ public sealed class ReflectedField
     public void DeleteArrayElmentAtIndex(int index)
     {
         m_Children.RemoveAt(index);
-        m_ArraySize--;
+        m_ElementCount--;
         UpdateArrayElementNames();
     }
 
@@ -1346,6 +1435,13 @@ public sealed class ReflectedField
                 case ReflectedFieldType.IList:
                     m_IsExplanded = EditorGUILayout.Foldout(isExpanded, displayName);
                     break;
+                case ReflectedFieldType.IDictionary:
+                    m_IsExplanded = EditorGUILayout.Foldout(isExpanded, displayName);
+                    break;
+                case ReflectedFieldType.KeyValuePair:
+                    m_Children[0].DoLayout();
+                    m_Children[1].DoLayout();
+                    break;
             }
 
             if (!isValuetype)
@@ -1379,14 +1475,19 @@ public sealed class ReflectedField
         EditorGUI.indentLevel++;
         if (isExpanded)
         {
-            if (isArray)
+            if (isArray || isDictionary)
             {
                 arraySize = EditorGUILayout.IntField("Size", arraySize);
             }
 
-            for (int i = 0; i < m_Children.Count; i++)
+
+
+            if (m_PropertyType != ReflectedFieldType.KeyValuePair)
             {
-                m_Children[i].DoLayout();
+                for (int i = 0; i < m_Children.Count; i++)
+                {
+                    m_Children[i].DoLayout();
+                }
             }
         }
         EditorGUI.indentLevel--;
@@ -1458,19 +1559,19 @@ public sealed class ReflectedField
 
     public void AppendInfo(StringBuilder builder, int indent)
     {
-        for(int i = 0; i < indent; i++)
+        for (int i = 0; i < indent; i++)
         {
             builder.Append(' ');
         }
 
         builder.AppendLine(ToString());
 
-        for(int i = 0; i < m_Children.Count; i++)
+        for (int i = 0; i < m_Children.Count; i++)
         {
             m_Children[i].AppendInfo(builder, indent++);
         }
     }
-  
+
     public override string ToString()
     {
         return m_DisplayName + " || " + "{Path} = " + m_Path + " {Type} = " + propertyType.ToString();

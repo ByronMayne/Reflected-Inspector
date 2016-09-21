@@ -40,7 +40,7 @@ public class ReflectionHelperArrayTests
         Classroom classroom = new Classroom();
 
         string path = SequenceHelper.AppendListEntryToSequence("m_Students", 0) + ".Name";
-        string name = (string)ReflectionHelper.GetFieldValue(path, classroom);
+        string name = ReflectionHelper.GetFieldValue<string>(path, classroom);
         Assert.AreEqual("Frank", name);
     }
 
@@ -51,7 +51,7 @@ public class ReflectionHelperArrayTests
         Classroom classroom = new Classroom();
 
         string path = SequenceHelper.AppendListEntryToSequence("Teachers", 0) + ".Name";
-        string name = (string)ReflectionHelper.GetFieldValue(path, classroom);
+        string name = ReflectionHelper.GetFieldValue<string>(path, classroom);
         Assert.AreEqual("Mrs Henry", name);
     }
 }
