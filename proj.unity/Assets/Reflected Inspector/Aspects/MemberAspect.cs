@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using Type = System.Type;
 
@@ -428,10 +430,22 @@ namespace ReflectedInspector
         {
             ReflectionHelper.SetFieldValue(aspectPath, reflectedAspect.targets[0], value);
 
-            for (int i = 0; i < elementCount; i++)
+            var iterator = GetIterator();
+
+            while (iterator.MoveNext())
             {
-                this[i].SaveValue();
+                iterator.Current.SaveValue();
             }
+        }
+
+        /// <summary>
+        /// Iterates over a all elements.
+        /// </summary>
+        /// <returns></returns>
+        public virtual IEnumerator<MemberAspect> GetIterator()
+        {
+            // We never return our self. 
+            yield break;
         }
 
         /// <summary>

@@ -114,6 +114,19 @@ namespace ReflectedInspector
         }
 
         /// <summary>
+        /// Iterates over a all elements.
+        /// </summary>
+        /// <returns></returns>
+        public override IEnumerator<MemberAspect> GetIterator()
+        {
+            // We never return our self. 
+            for(int i = 0; i < m_Children.Count; i++)
+            {
+                yield return m_Children[i];
+            }
+        }
+
+        /// <summary>
         /// Loads all the children from our current value.
         /// </summary>
         private void LoadChildren()

@@ -78,6 +78,15 @@ namespace ReflectedInspector
             }
         }
 
+        public override IEnumerator<MemberAspect> GetIterator()
+        {
+            base.GetIterator();
+            for(int i = 0; i < m_Children.Count; i++)
+            {
+                yield return m_Children[i];
+            }
+        }
+
 
         public ArrayAspect(ReflectedAspect objectAspect, string aspectPath) : base(objectAspect, aspectPath)
         {
