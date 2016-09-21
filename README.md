@@ -1,5 +1,8 @@
  [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://github.com/ByronMayne/Reflected-Inspector/blob/master/LICENSE)
  
+ ### Heads Up
+ This repo is under quite a big rework right now to make things that much better. 
+ 
 # Reflected Inspector
 
 Unity's [Serialized Object](https://docs.unity3d.com/ScriptReference/SerializedObject.html) and [Serialized Property](https://docs.unity3d.com/ScriptReference/SerializedProperty.html) system are really powerful things but have their limitions. Reflected Inspector is designed to overcome some of the problems that I have come across. At it's current state it lets you view and edit non-serialized types that Unity can't normally expose to use. This allows for quicker debugging.
