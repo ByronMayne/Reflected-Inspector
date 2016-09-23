@@ -329,7 +329,7 @@ namespace ReflectedInspector
         public string memberName
         {
             get { return m_MemberName; }
-            protected set { m_MemberName = value; }
+            internal set { m_MemberName = value; }
         }
 
         /// <summary>
@@ -375,12 +375,20 @@ namespace ReflectedInspector
         /// <summary>
         /// Does this object have value?
         /// </summary>
-        protected abstract bool hasValue { get; }
+        public abstract bool hasValue { get; }
 
         /// <summary>
         /// Is this object a value type?
         /// </summary>
         protected abstract bool isValueType { get; }
+
+        /// <summary>
+        /// Is this type serializable by Unity? 
+        /// </summary>
+        protected virtual bool isSerializableByUnity
+        {
+            get { return true; }
+        }
 
         /// <summary>
         /// Creates a new instance of a Member Aspect
@@ -477,6 +485,15 @@ namespace ReflectedInspector
         /// </summary>
         public virtual void OnGUILayout()
         {
+            if (isSerializableByUnity)
+            {
+                GUI.backgroundColor = Color.green;
+            }
+            else
+            {
+                GUI.backgroundColor = Color.red;
+            }
+
             // We can't do nulls with value types.
             if (!isValueType)
             {
@@ -500,6 +517,14 @@ namespace ReflectedInspector
                 }
                 EditorGUI.EndDisabledGroup();
             }
+            else
+            {
+                GUILayout.Button("Value", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            }
+
+
+
+            GUI.backgroundColor = Color.white;
         }
 
         protected virtual void OnNewValueLoaded()

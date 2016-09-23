@@ -1,8 +1,9 @@
 ﻿using Type = System.Type;
 using System.Collections.Generic;
 using UnityEditor;
-using System;
 using System.Collections;
+using System.Reflection;
+using TinyJSON;
 
 namespace ReflectedInspector
 {
@@ -20,6 +21,7 @@ namespace ReflectedInspector
         /// <summary>
         /// The true value that this class holds.
         /// </summary>
+        [Include]
         private List<MemberAspect> m_Children;
 
         /// <summary>
@@ -96,7 +98,7 @@ namespace ReflectedInspector
         /// <summary>
         /// Does this object have value?
         /// </summary>
-        protected override bool hasValue
+        public override bool hasValue
         {
             get { return m_Children != null; }
         }
@@ -153,7 +155,9 @@ namespace ReflectedInspector
             m_Children = new List<MemberAspect>();
 
             bool wasSuccessful = false;
-            m_Value = ReflectionHelper.GetFieldValue(aspectPath, reflectedAspect.targets[0], out wasSuccessful, out m_FieldType);
+            FieldInfo field; 
+            m_Value = ReflectionHelper.GetFieldValue(aspectPath, reflectedAspect.targets[0], out wasSuccessful, out field);
+            m_FieldType = field.FieldType;
 
             if (wasSuccessful)
             {

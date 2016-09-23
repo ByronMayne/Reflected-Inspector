@@ -14,8 +14,8 @@ public static class ReflectionHelper
     public static T GetFieldValue<T>(string fieldSequence, object @object)
     {
         bool wasSuccessful = false;
-        Type fieldType = null;
-        object value = GetFieldValue(fieldSequence, @object, out wasSuccessful, out fieldType);
+        FieldInfo fieldInfo = null;
+        object value = GetFieldValue(fieldSequence, @object, out wasSuccessful, out fieldInfo);
 
         if( value == null && typeof(T).IsValueType)
         {
@@ -25,9 +25,16 @@ public static class ReflectionHelper
     }
 
 
-    public static object GetFieldValue(string fieldSequence, object @object, out bool wasSuccessful, out Type fieldType)
+    public static object GetFieldValue(string fieldSequence, object @object, out bool wasSuccessful, out FieldInfo fieldInfo)
     {
-        fieldType = null;
+        if( string.IsNullOrEmpty(fieldSequence))
+        {
+            fieldInfo = null;
+            wasSuccessful = false;
+            return null;
+        }
+
+        fieldInfo = null;
 
         // We can't work if we don't have a root object.
         if (@object == null)
@@ -60,10 +67,7 @@ public static class ReflectionHelper
                 {
                     // We are out of range we just create a new instance.
                     wasSuccessful = false;
-                    fieldType = GetElementType(list);
-                    object newValue = GetDefault(fieldType);
-                    fieldType = GetElementType(list);
-                    return newValue;
+                    return GetDefault(GetElementType(list)); ;
                 }
 
                 // Load our value
@@ -79,7 +83,6 @@ public static class ReflectionHelper
                 {
                     @object = dictionary[key];
                     wasSuccessful = true;
-                    return @object;
                 }
                 else
                 {
@@ -94,7 +97,7 @@ public static class ReflectionHelper
                 type = @object.GetType();
 
                 // Look for our field
-                FieldInfo fieldInfo = type.GetField(entries[i], INSTANCE_BINDING_FLAGS);
+                fieldInfo = type.GetField(entries[i], INSTANCE_BINDING_FLAGS);
 
                 if (fieldInfo == null)
                 {
@@ -105,7 +108,6 @@ public static class ReflectionHelper
 
                 // Load the value from our field.
                 @object = fieldInfo.GetValue(@object);
-                fieldType = fieldInfo.FieldType;
             }
 
             // If we are not on the last loop and we have a null.
@@ -113,7 +115,6 @@ public static class ReflectionHelper
             {
                 // Some object along the way was null. 
                 wasSuccessful = false;
-                fieldType = null;
                 return @object;
             }
         }
@@ -236,13 +237,25 @@ public static class ReflectionHelper
 
     }
 
+    internal static void GetDictionaryTypes(DictionaryEntry dictionary, out Type keyType, out Type valueType)
+    {
+        Type type = dictionary.GetType();
+        keyType = null;
+        valueType = null;
+        if (typeof(DictionaryEntry).IsAssignableFrom(type))
+        {
+            Type[] args = type.GetGenericArguments();
+            keyType = args[0];
+            valueType = args[1];
+        }
+    }
+
     public static Type GetElementType(object listObject)
     {
         Type type = listObject.GetType();
 
         if( typeof(IList).IsAssignableFrom(type))
         {
-            Type elementType = type.GetElementType();
             return type.GetGenericArguments()[0];
         }
         return null;

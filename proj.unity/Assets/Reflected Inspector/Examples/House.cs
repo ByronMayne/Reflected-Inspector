@@ -47,14 +47,21 @@ public class House : ReflectedBehaviour
     //  "Mayne"
     //};
 
-    private string m_Name = "Byron";
-    private int m_Age;
-    private bool m_IsAlive;
-    private float m_Length;
-    [System.NonSerialized]
-    public Door m_Door;
-    [System.NonSerialized]
-    public Window m_Window;
+    //private string m_Name = "Byron";
+    //private int m_Age;
+    //private bool m_IsAlive;
+    //private float m_Length;
+    //[System.NonSerialized]
+    //public Door m_Door;
+    //[System.NonSerialized]
+    //public Window m_Window;
+
+    public Dictionary<string, Door> m_DoorCatalog = new Dictionary<string, Door>()
+    {
+        { "Door One", new Door() },
+        { "Door Two", new Door() },
+        { "Door Three", new Door() },
+    };
 
 
     //private List<Window> m_Windows = new List<Window>();

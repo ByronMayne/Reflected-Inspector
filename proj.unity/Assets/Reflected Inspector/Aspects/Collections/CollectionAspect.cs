@@ -8,6 +8,8 @@ namespace ReflectedInspector
 {
     public abstract class CollectionAspect : MemberAspect
     {
+
+
         /// <summary>
         /// The base type that is collection is.
         /// </summary>
@@ -26,7 +28,7 @@ namespace ReflectedInspector
         /// <summary>
         /// How many elements are currently in this collection
         /// </summary>
-        private int m_ElementCount;
+        protected int m_ElementCount;
 
         /// <summary>
         /// Gets or set the type that is contained in this collection.
@@ -43,6 +45,9 @@ namespace ReflectedInspector
         {
             get { return m_PolymorphicType; }
         }
+
+
+
 
         /// <summary>
         /// The default constructor for this class.

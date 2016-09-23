@@ -1,8 +1,8 @@
 ﻿using Type = System.Type;
 using System.Collections.Generic;
-using UnityEditor;
 using System.Reflection;
 using System.Collections;
+using TinyJSON;
 
 namespace ReflectedInspector
 {
@@ -19,6 +19,7 @@ namespace ReflectedInspector
         /// <summary>
         /// The true value that this class holds.
         /// </summary>
+        [Include]
         private List<MemberAspect> m_Children;
 
         public object[] targets
@@ -119,7 +120,16 @@ namespace ReflectedInspector
 
             if (typeof(IDictionary).IsAssignableFrom(type))
             {
-                return new ArrayAspect(this, aspectPath);
+                Type keyType = type.GetGenericArguments()[0];
+                
+                if( keyType == typeof(string) || keyType == typeof(int) || keyType == typeof(float))
+                {
+                    return new DictionaryAspect(this, aspectPath);
+                }
+                else
+                {
+                    throw new System.NotSupportedException("Dictionaries with keys that are not int, float, or string are not support");
+                }
             }
 
             return new ObjectAspect(this, aspectPath);

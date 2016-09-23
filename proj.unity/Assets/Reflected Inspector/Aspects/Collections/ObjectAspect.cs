@@ -1,14 +1,16 @@
 ﻿using Type = System.Type;
+using Attribute = System.Attribute;
 using System.Collections.Generic;
 using UnityEditor;
 using System.Reflection;
-using System.Collections;
 using UnityEngine;
+using TinyJSON;
 
 namespace ReflectedInspector
 {
     public class ObjectAspect : MemberAspect
     {
+
         /// <summary>
         /// The style we use to draw null values.
         /// </summary>
@@ -20,6 +22,11 @@ namespace ReflectedInspector
         private object m_Value;
 
         /// <summary>
+        /// Is this class serializable by Unity?
+        /// </summary>
+        private bool m_IsUnitySerializable = false;
+
+        /// <summary>
         /// Is this item expanded in the editor?
         /// </summary>
         private bool m_IsExpanded = false;
@@ -27,6 +34,7 @@ namespace ReflectedInspector
         /// <summary>
         /// The true value that this class holds.
         /// </summary>
+        [Include]
         private List<MemberAspect> m_Children;
 
         /// <summary>
@@ -64,7 +72,7 @@ namespace ReflectedInspector
         /// <summary>
         /// Does this object have value?
         /// </summary>
-        protected override bool hasValue
+        public override bool hasValue
         {
             get { return m_Value != null || m_FieldType.IsValueType; }
         }
@@ -77,11 +85,23 @@ namespace ReflectedInspector
             get { return m_FieldType.IsValueType; }
         }
 
+
         public override object value
         {
             get
             {
                 return m_Value;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if this type can be serialized by Unity false if it can not. 
+        /// </summary>
+        protected override bool isSerializableByUnity
+        {
+            get
+            {
+                return m_IsUnitySerializable;
             }
         }
 
@@ -95,11 +115,12 @@ namespace ReflectedInspector
         protected override void LoadValue()
         {
             // We can only load children if we have a value.
-
             m_Children = new List<MemberAspect>();
 
             bool wasSuccessful = false;
-            m_Value = ReflectionHelper.GetFieldValue(aspectPath, reflectedAspect.targets[0], out wasSuccessful, out m_FieldType);
+            FieldInfo fieldInfo;
+            m_Value = ReflectionHelper.GetFieldValue(aspectPath, reflectedAspect.targets[0], out wasSuccessful, out fieldInfo);
+            m_FieldType = fieldInfo.FieldType;
 
             if (wasSuccessful && hasValue)
             {
@@ -108,6 +129,40 @@ namespace ReflectedInspector
             else
             {
                 m_ValueType = m_FieldType;
+            }
+
+            // Unity can't serialize interfaces
+            m_IsUnitySerializable = !m_ValueType.IsInterface;
+            // Or generic types
+            m_IsUnitySerializable &= !m_ValueType.IsGenericType;
+
+            if (m_IsUnitySerializable)
+            {
+                //TODO: Add a case for type of List<T>
+
+                if (typeof(MonoBehaviour).IsAssignableFrom(m_FieldType))
+                {
+                    // It's a component.
+                    m_IsUnitySerializable = true;
+                }
+
+                Attribute[] attributes = fieldInfo.GetCustomAttributes(true) as Attribute[];
+
+                for(int i = 0; i < attributes.Length; i++)
+                {
+                    Type attributeType = attributes[i].GetType();
+
+                    if( attributeType == typeof(System.SerializableAttribute))
+                    {
+                        m_IsUnitySerializable = true;
+                    }
+
+                    if( attributeType == typeof(System.NonSerializedAttribute))
+                    {
+                        m_IsUnitySerializable = false;
+                        break;
+                    }
+                }
             }
 
             LoadChildren();
@@ -120,7 +175,7 @@ namespace ReflectedInspector
         public override IEnumerator<MemberAspect> GetIterator()
         {
             // We never return our self. 
-            for(int i = 0; i < m_Children.Count; i++)
+            for (int i = 0; i < m_Children.Count; i++)
             {
                 yield return m_Children[i];
             }

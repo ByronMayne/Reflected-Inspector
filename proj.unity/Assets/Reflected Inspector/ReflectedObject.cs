@@ -113,12 +113,12 @@ public sealed class ReflectedObject
         object lhsValue = null, rhsValue = null;
 
         bool wasSuccessful = false;
-        Type fieldType = null;
-        rhsValue = ReflectionHelper.GetFieldValue(property.propertyPath, m_Targets[0], out wasSuccessful, out fieldType);
+        FieldInfo fieldInfo = null;
+        rhsValue = ReflectionHelper.GetFieldValue(property.propertyPath, m_Targets[0], out wasSuccessful, out fieldInfo);
 
         for (int i = 1; i < m_Targets.Length; i++)
         {
-            lhsValue = ReflectionHelper.GetFieldValue(property.propertyPath, m_Targets[0], out wasSuccessful, out fieldType);
+            lhsValue = ReflectionHelper.GetFieldValue(property.propertyPath, m_Targets[0], out wasSuccessful, out fieldInfo);
 
             if (lhsValue != rhsValue)
             {

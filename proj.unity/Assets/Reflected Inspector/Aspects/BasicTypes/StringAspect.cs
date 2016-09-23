@@ -1,6 +1,5 @@
-﻿using System;
+﻿using TinyJSON;
 using UnityEditor;
-using UnityEngine;
 using Type = System.Type;
 
 
@@ -11,6 +10,7 @@ namespace ReflectedInspector
         /// <summary>
         /// The true value that this class holds.
         /// </summary>
+        [Include]
         private string m_Value;
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace ReflectedInspector
         /// <summary>
         /// Does this object have value?
         /// </summary>
-        protected override bool hasValue
+        public override bool hasValue
         {
             get { return m_Value != null; }
         }
@@ -78,7 +78,10 @@ namespace ReflectedInspector
         /// </summary>
         protected override void LoadValue()
         {
-            m_Value = ReflectionHelper.GetFieldValue<string>(aspectPath, reflectedAspect.targets[0]);
+            if (!string.IsNullOrEmpty(aspectPath))
+            {
+                m_Value = ReflectionHelper.GetFieldValue<string>(aspectPath, reflectedAspect.targets[0]);
+            }
         }
 
 

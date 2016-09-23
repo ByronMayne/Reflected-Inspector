@@ -1,4 +1,4 @@
-﻿using System;
+﻿using TinyJSON;
 using UnityEditor;
 using UnityEngine;
 using Type = System.Type;
@@ -11,6 +11,7 @@ namespace ReflectedInspector
         /// <summary>
         /// The true value that this class holds.
         /// </summary>
+        [Include]
         private int m_Value;
 
         /// <summary>
@@ -43,7 +44,7 @@ namespace ReflectedInspector
         /// <summary>
         /// Does this object have value?
         /// </summary>
-        protected override bool hasValue
+        public override bool hasValue
         {
             get { return true; }
         }
@@ -91,7 +92,13 @@ namespace ReflectedInspector
 
         public override void OnGUILayout()
         {
-            m_Value = EditorGUILayout.IntField(memberName, m_Value);
+            GUILayout.BeginHorizontal();
+            {
+                m_Value = EditorGUILayout.IntField(memberName, m_Value);
+                base.OnGUILayout();
+            }
+            GUILayout.EndHorizontal();
+
         }
     }
 }
