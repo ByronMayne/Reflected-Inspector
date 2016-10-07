@@ -229,7 +229,7 @@ namespace ReflectedInspector
         /// <summary>
         /// Handles the drawing logic for this array and all it's children.
         /// </summary>
-        public override void OnGUILayout()
+        public override void OnGUI()
         {
             EditorGUILayout.BeginHorizontal();
             {
@@ -247,7 +247,7 @@ namespace ReflectedInspector
                     EditorGUILayout.LabelField(memberName, "Null", m_NullStyle, GUILayout.ExpandWidth(false));
                     GUILayout.FlexibleSpace();
                 }
-                base.OnGUILayout();
+                base.OnGUI();
             }
             EditorGUILayout.EndHorizontal();
 
@@ -256,7 +256,7 @@ namespace ReflectedInspector
                 EditorGUI.indentLevel++;
                 for (int i = 0; i < m_Children.Count; i++)
                 {
-                    m_Children[i].OnGUILayout();
+                    m_Children[i].OnGUI();
                 }
                 EditorGUI.indentLevel--;
             }

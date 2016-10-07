@@ -90,12 +90,12 @@ namespace ReflectedInspector
             rectAspect.m_Value = m_Value;
         }
 
-        public override void OnGUILayout()
+        public override void OnGUI()
         {
             EditorGUILayout.BeginHorizontal();
             {
                 m_Value = EditorGUILayout.RectField(memberName, m_Value);
-                base.OnGUILayout();
+                base.OnGUI();
             }
             EditorGUILayout.EndHorizontal();
         }

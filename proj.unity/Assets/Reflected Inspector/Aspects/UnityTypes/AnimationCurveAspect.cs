@@ -92,12 +92,12 @@ namespace ReflectedInspector
             cruveAspect.m_Value.preWrapMode = m_Value.preWrapMode;
         }
 
-        public override void OnGUILayout()
+        public override void OnGUI()
         {
             EditorGUILayout.BeginHorizontal();
             {
                 m_Value = EditorGUILayout.CurveField(memberName, m_Value);
-                base.OnGUILayout();
+                base.OnGUI();
             }
             EditorGUILayout.EndHorizontal();
         }

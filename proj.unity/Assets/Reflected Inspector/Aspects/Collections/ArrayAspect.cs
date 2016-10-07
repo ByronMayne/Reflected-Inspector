@@ -194,7 +194,7 @@ namespace ReflectedInspector
             elementCount = EditorGUILayout.IntField("Size", elementCount);
             for (int i = 0; i < m_Children.Count; i++)
             {
-                m_Children[i].OnGUILayout();
+                m_Children[i].OnGUI();
             }
         }
 

@@ -158,12 +158,12 @@ namespace ReflectedInspector
         /// <summary>
         /// Handles the drawing logic for this array and all it's children.
         /// </summary>
-        public sealed override void OnGUILayout()
+        public sealed override void OnGUI()
         {
             EditorGUILayout.BeginHorizontal();
             {
                 m_IsExpanded = EditorGUILayout.Foldout(m_IsExpanded, memberName);
-                base.OnGUILayout();
+                base.OnGUI();
             }
             EditorGUILayout.EndHorizontal();
 

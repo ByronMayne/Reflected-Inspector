@@ -90,12 +90,12 @@ namespace ReflectedInspector
             vect2Aspect.m_Value = m_Value;
         }
 
-        public override void OnGUILayout()
+        public override void OnGUI()
         {
             EditorGUILayout.BeginHorizontal();
             {
                 m_Value = EditorGUILayout.Vector2Field(memberName, m_Value);
-                base.OnGUILayout();
+                base.OnGUI();
             }
             EditorGUILayout.EndHorizontal();
         }

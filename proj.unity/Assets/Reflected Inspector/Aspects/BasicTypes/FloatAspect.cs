@@ -90,12 +90,12 @@ namespace ReflectedInspector
             floatAspect.m_Value = m_Value;
         }
 
-        public override void OnGUILayout()
+        public override void OnGUI()
         {
             GUILayout.BeginHorizontal();
             {
                 m_Value = EditorGUILayout.FloatField(memberName, m_Value);
-                base.OnGUILayout();
+                base.OnGUI();
             }
             GUILayout.EndHorizontal();
         }

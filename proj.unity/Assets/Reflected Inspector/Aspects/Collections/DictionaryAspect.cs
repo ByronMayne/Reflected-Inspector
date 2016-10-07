@@ -9,6 +9,18 @@ using UnityEngine;
 
 namespace ReflectedInspector
 {
+    public struct AspectPair
+    {
+        public AspectPair(MemberAspect key, MemberAspect value)
+        {
+            Key = key;
+            Value = value;
+        }
+
+        public MemberAspect Key;
+        public MemberAspect Value;
+    }
+
     public class DictionaryAspect : CollectionAspect
     {
         /// <summary>
@@ -24,7 +36,7 @@ namespace ReflectedInspector
         /// The true value that this class holds.
         /// </summary>
         [Include]
-        private Dictionary<MemberAspect, MemberAspect> m_Children;
+        private List<AspectPair> m_Children;
 
         /// <summary>
         /// Returns back typeof(List<ArrayAspect>) since this aspect is of that type. 
@@ -87,7 +99,7 @@ namespace ReflectedInspector
         /// </summary>
         protected override void LoadValue()
         {
-            m_Children = new Dictionary<MemberAspect, MemberAspect>();
+            m_Children = new List<AspectPair>();
 
             bool wasSuccessful = false;
             FieldInfo field;
@@ -104,10 +116,10 @@ namespace ReflectedInspector
                     string path = SequenceHelper.AppendDictionaryEntryToSequence(aspectPath, entry.Key.ToString());
                     StringAspect key = new StringAspect(reflectedAspect, null);
                     key.stringValue = entry.Key.ToString();
-                    key.memberName = "Key";
-                    MemberAspect child = reflectedAspect.CreateAspectForType(m_FieldType, path);
-                    child.memberName = "Value";
-                    m_Children.Add(key, child);
+                    key.memberName = null;
+                    MemberAspect value = reflectedAspect.CreateAspectForType(m_FieldType, path);
+                    value.memberName = "Value";
+                    m_Children.Add(new AspectPair(key, value));
                     m_ElementCount++;
                 }
             }
@@ -131,28 +143,44 @@ namespace ReflectedInspector
             }
         }
 
+        private bool m_SkinCreated = false;
+        private GUIStyle m_Skin = null;
+
         protected override void OnDrawContent()
         {
+            if(!m_SkinCreated)
+            {
+                m_Skin = new GUIStyle(GUI.skin.window);
+                m_Skin.stretchHeight = false;
+                m_Skin.padding.top = 0;
+            }
+
             elementCount = EditorGUILayout.IntField("Size", elementCount);
 
-            GUILayout.BeginVertical(GUI.skin.box);
+            for (int i = 0; i < m_Children.Count; i++)
             {
-                foreach (var it in m_Children)
+                GUILayout.BeginVertical(m_Skin);
                 {
-                    it.Key.OnGUILayout();
+                    MemberAspect key = m_Children[i].Key;
+                    MemberAspect value = m_Children[i].Value;
 
-                    Rect valueRect = EditorGUILayout.BeginVertical();
+                    EditorGUIUtility.labelWidth = 30;
+                    EditorGUIUtility.fieldWidth = 1;
+                    key.isExpanded = EditorGUILayout.Foldout(key.isExpanded, GUIContent.none);
+                    EditorGUI.indentLevel++;
+                    GUILayout.Space(-EditorGUIUtility.singleLineHeight);
+                    key.OnGUI();
+                    EditorGUIUtility.labelWidth = -1;
+                    EditorGUIUtility.fieldWidth = -1;
+                    if (key.isExpanded)
                     {
-                        EditorGUI.indentLevel++;
-                        it.Value.OnGUILayout();
-                        EditorGUI.indentLevel--;
+                        value.OnGUI();
                     }
-                    EditorGUILayout.EndVertical();
-                    valueRect.x = (EditorGUI.indentLevel + 1) * 16f;
-                    GUI.Box(valueRect, GUIContent.none);
+                    EditorGUI.indentLevel--;
                 }
+                GUILayout.EndVertical();
             }
-            GUILayout.EndVertical();
+            GUI.backgroundColor = Color.white;
         }
 
         /// <summary>
@@ -160,7 +188,7 @@ namespace ReflectedInspector
         /// </summary>
         protected override MemberAspect GetLastElement()
         {
-            return null;
+            return  m_Children.Count > 0 ? m_Children[m_Children.Count - 1].Value : null;
         }
     }
 }
