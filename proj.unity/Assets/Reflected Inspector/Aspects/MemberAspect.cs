@@ -15,6 +15,11 @@ namespace ReflectedInspector
         private string m_MemberName;
 
         /// <summary>
+        /// Is this item expanded in the inspector?
+        /// </summary>
+        private bool m_IsExpanded;
+
+        /// <summary>
         /// The root object that owns this property.
         /// </summary>
         private ReflectedAspect m_ReflectedAspect;
@@ -337,7 +342,8 @@ namespace ReflectedInspector
         /// </summary>
         public virtual bool isExpanded
         {
-            get { return false; }
+            get { return m_IsExpanded; }
+            set { m_IsExpanded = value;  }
         }
 
         /// <summary>
@@ -483,17 +489,8 @@ namespace ReflectedInspector
         /// <summary>
         /// Invoked when this element should draw.
         /// </summary>
-        public virtual void OnGUILayout()
+        public virtual void OnGUI()
         {
-            if (isSerializableByUnity)
-            {
-                GUI.backgroundColor = Color.green;
-            }
-            else
-            {
-                GUI.backgroundColor = Color.red;
-            }
-
             // We can't do nulls with value types.
             if (!isValueType)
             {
@@ -517,14 +514,6 @@ namespace ReflectedInspector
                 }
                 EditorGUI.EndDisabledGroup();
             }
-            else
-            {
-                GUILayout.Button("Value", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
-            }
-
-
-
-            GUI.backgroundColor = Color.white;
         }
 
         protected virtual void OnNewValueLoaded()

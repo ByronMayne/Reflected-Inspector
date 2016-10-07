@@ -50,7 +50,20 @@ namespace ReflectedInspector
             {
                 Type fieldType = fileds[i].FieldType;
 
-                MemberAspect member = CreateAspectForType(fieldType, fileds[i].Name);
+                bool successful = false;
+                FieldInfo field;
+                object value = ReflectionHelper.GetFieldValue(fileds[i].Name, m_Targets[0], out successful, out field);
+                MemberAspect member = null;
+
+                if (successful)
+                {
+                    member = CreateAspectForType(value.GetType(), fileds[i].Name);
+                }
+                else
+                {
+                    member = CreateAspectForType(fieldType, fileds[i].Name);
+                }
+  
 
                 m_Children.Add(member);
             }
@@ -151,7 +164,7 @@ namespace ReflectedInspector
         {
             for (int i = 0; i < m_Children.Count; i++)
             {
-                m_Children[i].OnGUILayout();
+                m_Children[i].OnGUI();
             }
         }
     }
