@@ -4,6 +4,7 @@ using UnityEditor;
 using System.Collections;
 using System.Reflection;
 using TinyJSON;
+using System;
 
 namespace ReflectedInspector
 {
@@ -49,7 +50,7 @@ namespace ReflectedInspector
         /// </summary>
         public override void DeleteArrayElmentAtIndex(int index)
         {
-            if( index < m_Children.Count )
+            if (index < m_Children.Count)
             {
                 m_Children.RemoveAt(index);
             }
@@ -83,7 +84,7 @@ namespace ReflectedInspector
         public override IEnumerator<MemberAspect> GetIterator()
         {
             base.GetIterator();
-            for(int i = 0; i < m_Children.Count; i++)
+            for (int i = 0; i < m_Children.Count; i++)
             {
                 yield return m_Children[i];
             }
@@ -92,7 +93,7 @@ namespace ReflectedInspector
 
         public ArrayAspect(ReflectedAspect objectAspect, string aspectPath) : base(objectAspect, aspectPath)
         {
-            m_Children = new List<MemberAspect>();
+            LoadChildren();
         }
 
         /// <summary>
@@ -132,7 +133,7 @@ namespace ReflectedInspector
         {
             get
             {
-                return m_Children;
+                return m_Value;
             }
         }
 
@@ -141,10 +142,55 @@ namespace ReflectedInspector
         /// </summary>
         private void UpdateElementNames()
         {
-            for(int i = 0; i < m_Children.Count; i++)
+            for (int i = 0; i < m_Children.Count; i++)
             {
                 m_Children[i].SetAspectPath(SequenceHelper.AppendListEntryToSequence(aspectPath, i));
             }
+        }
+
+        /// <summary>
+        /// Loads all the children from our current value.
+        /// </summary>
+        private void LoadChildren()
+        {
+            m_ElementCount = 0;
+            m_Children = new List<MemberAspect>();
+
+            if (hasValue)
+            {
+                IList list = m_Value as IList;
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    Type fieldType = list[i].GetType();
+
+                    string sequencePath = SequenceHelper.AppendListEntryToSequence(aspectPath, i);
+                    MemberAspect member = reflectedAspect.CreateAspectForType(fieldType, sequencePath);
+
+                    m_Children.Add(member);
+                    m_ElementCount++;
+                }
+            }
+        }
+
+        public override void SaveValue()
+        {
+            // Get the true type that we are using. 
+            Type workingType = GetWorkingType();
+            // Create a new instance
+            IList newList = Activator.CreateInstance(workingType) as IList;
+            // Get our default value for our new array
+            object defaultValue = ReflectionHelper.GetDefault(workingType);
+            // Insert null values for each of our children.
+            for(int i = 0;  i < m_Children.Count; i++)
+            {
+                // Insert null for class types and default for structs. 
+                newList.Add(defaultValue);
+            }
+            // Set our local value.
+            m_Value = newList;
+            // Call the base to write it to our field.
+            base.SaveValue();
         }
 
         /// <summary>
@@ -155,7 +201,7 @@ namespace ReflectedInspector
             m_Children = new List<MemberAspect>();
 
             bool wasSuccessful = false;
-            FieldInfo field; 
+            FieldInfo field;
             m_Value = ReflectionHelper.GetFieldValue(aspectPath, reflectedAspect.targets[0], out wasSuccessful, out field);
             m_FieldType = field.FieldType;
 

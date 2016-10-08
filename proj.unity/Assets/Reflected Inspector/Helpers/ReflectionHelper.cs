@@ -17,17 +17,16 @@ public static class ReflectionHelper
         FieldInfo fieldInfo = null;
         object value = GetFieldValue(fieldSequence, @object, out wasSuccessful, out fieldInfo);
 
-        if( value == null && typeof(T).IsValueType)
+        if (value == null && typeof(T).IsValueType)
         {
             value = default(T);
         }
         return (T)System.Convert.ChangeType(value, typeof(T));
     }
 
-
     public static object GetFieldValue(string fieldSequence, object @object, out bool wasSuccessful, out FieldInfo fieldInfo)
     {
-        if( string.IsNullOrEmpty(fieldSequence))
+        if (string.IsNullOrEmpty(fieldSequence))
         {
             fieldInfo = null;
             wasSuccessful = false;
@@ -63,7 +62,7 @@ public static class ReflectionHelper
                 // Get our index
                 int index = SequenceHelper.GetArrayIndex(entries[i]);
 
-                if( list.Count <= index )
+                if (list.Count <= index)
                 {
                     // We are out of range we just create a new instance.
                     wasSuccessful = false;
@@ -73,21 +72,33 @@ public static class ReflectionHelper
                 // Load our value
                 @object = list[index];
             }
-            else if( SequenceHelper.IsDictionaryPath(entries[i]))
+            else if (SequenceHelper.IsDictionaryPath(entries[i]))
             {
-                IDictionary dictionary = @object as IDictionary;
-
+                Type dictionaryType = @object.GetType();
+                Type keyType;
+                Type valueType;
+                GetDictionaryTypes(dictionaryType, out keyType, out valueType);
+                PropertyInfo property = GetIndexor(dictionaryType, keyType);
                 string key = SequenceHelper.GetDictionaryKey(entries[i]);
-
-                if (dictionary.Contains(key))
+                ParameterInfo[] args = property.GetIndexParameters();
+                try
                 {
-                    @object = dictionary[key];
+                    @object = property.GetValue(@object, new object[] { key });
                     wasSuccessful = true;
                 }
-                else
+                catch (KeyNotFoundException e)
                 {
                     wasSuccessful = false;
-                    return null; 
+
+                    if (e != null)
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        // We have a exception we did not expect to get.
+                        throw e;
+                    }
                 }
             }
             else // Not an array path
@@ -124,6 +135,55 @@ public static class ReflectionHelper
         return @object;
     }
 
+
+    /// <summary>
+    /// Takes a type and finds it's indexer if it exists for the types provided otherwise
+    /// returns false.
+    /// </summary>
+    private static PropertyInfo GetIndexor(Type dictionaryType, params Type[] indexArgs)
+    {
+        PropertyInfo[] properties = dictionaryType.GetProperties(INSTANCE_BINDING_FLAGS);
+
+        for (int i = 0; i < properties.Length; i++)
+        {
+            ParameterInfo[] indexerParams = properties[i].GetIndexParameters();
+
+            if (ValidateParameterTypes(indexerParams, indexArgs))
+            {
+                return properties[i];
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Checks a array of parameters to see if they match the order and length of a array
+    /// of types. Returns true if they match and false if they don't.
+    /// </summary>
+    private static bool ValidateParameterTypes(ParameterInfo[] parameters, Type[] types)
+    {
+        if (parameters.Length != types.Length)
+        {
+            return false;
+        }
+
+        for (int x = 0; x < parameters.Length; x++)
+        {
+            for (int y = 0; y < types.Length; y++)
+            {
+                if (parameters[x].ParameterType != types[y])
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Takes in a sequence path and sets the value of that object if it exists. Does not 
+    /// create new instances for incomplete paths. 
+    /// </summary>
     public static void SetFieldValue(string fieldSequence, object @object, object value)
     {
         // We can't work if we don't have a root object.
@@ -156,7 +216,7 @@ public static class ReflectionHelper
 
                 if (i == entries.Length - 1)
                 {
-                    if( index >= list.Count )
+                    if (index >= list.Count)
                     {
                         // TODO: This has a chance of reordering a list which is not ideal. Add would throw 
                         // an exception if the value was null which sucked.
@@ -170,7 +230,7 @@ public static class ReflectionHelper
                 }
                 else
                 {
-                    if( index >= list.Count )
+                    if (index >= list.Count)
                     {
                         // We are at a sub object that has no idex that is valid.
                         return;
@@ -237,30 +297,49 @@ public static class ReflectionHelper
 
     }
 
-    internal static void GetDictionaryTypes(DictionaryEntry dictionary, out Type keyType, out Type valueType)
+    /// <summary>
+    /// Takes a type and returns it's generic arguments if it's a dictionary or any other generic type. 
+    /// </summary>
+    internal static void GetDictionaryTypes(Type type, out Type keyType, out Type valueType)
     {
-        Type type = dictionary.GetType();
         keyType = null;
         valueType = null;
-        if (typeof(DictionaryEntry).IsAssignableFrom(type))
-        {
-            Type[] args = type.GetGenericArguments();
-            keyType = args[0];
-            valueType = args[1];
-        }
+        Type[] args = type.GetGenericArguments();
+        keyType = args[0];
+        valueType = args[1];
     }
 
+    /// <summary>
+    /// Gets the element type from a list object. 
+    /// </summary>
     public static Type GetElementType(object listObject)
     {
         Type type = listObject.GetType();
 
-        if( typeof(IList).IsAssignableFrom(type))
+        Type itemType = null;
+
+
+        if (typeof(IList).IsAssignableFrom(type))
         {
-            return type.GetGenericArguments()[0];
+            Type[] genericArgs = type.GetGenericArguments();
+
+            if (genericArgs.Length > 0)
+            {
+                itemType = type.GetGenericArguments()[0];
+            }
+            else
+            {
+                itemType = type.GetElementType();
+            }
+
         }
-        return null;
+        return itemType;
     }
 
+    /// <summary>
+    /// Returns the default value for the type sent in. If it's a value type
+    /// a new instance is created and if it's a reference type null is returned. 
+    /// </summary>
     public static object GetDefault(Type type)
     {
         if (type.IsValueType)

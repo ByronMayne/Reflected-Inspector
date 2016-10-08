@@ -100,6 +100,15 @@ public static class SequenceHelper
             path = path.Replace("m_", string.Empty);
         }
 
+        if(path.StartsWith(Constants.LIST_ENTRY_START))
+        {
+            int startIndex = path.IndexOf(Constants.LIST_ENTRY_START);
+            startIndex += Constants.LIST_ENTRY_START.Length;
+            int endIndex = path.LastIndexOf(Constants.LIST_ENTRY_END);
+            path = path.Substring(startIndex, path.Length - endIndex);
+            path = "Element " + path;
+        }
+
         StringBuilder newpath = new StringBuilder(path.Length * 2);
         newpath.Append(char.ToUpper(path[0]));
         for (int i = 1; i < path.Length; i++)

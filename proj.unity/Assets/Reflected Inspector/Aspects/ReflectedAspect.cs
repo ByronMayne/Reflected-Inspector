@@ -55,7 +55,7 @@ namespace ReflectedInspector
                 object value = ReflectionHelper.GetFieldValue(fileds[i].Name, m_Targets[0], out successful, out field);
                 MemberAspect member = null;
 
-                if (successful)
+                if (value != null)
                 {
                     member = CreateAspectForType(value.GetType(), fileds[i].Name);
                 }

@@ -46,8 +46,22 @@ namespace ReflectedInspector
             get { return m_PolymorphicType; }
         }
 
-
-
+        /// <summary>
+        /// If this member has a polymorphic type we return that type otherwise
+        /// we return the filed type. 
+        /// </summary>
+        /// <returns></returns>
+        public Type GetWorkingType()
+        {
+            if(m_PolymorphicType != null)
+            {
+                return m_PolymorphicType;
+            }
+            else
+            {
+                return m_FieldType;
+            }
+        }
 
         /// <summary>
         /// The default constructor for this class.
