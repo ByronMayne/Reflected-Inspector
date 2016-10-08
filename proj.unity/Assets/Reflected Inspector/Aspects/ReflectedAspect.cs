@@ -17,10 +17,18 @@ namespace ReflectedInspector
         private object[] m_Targets;
 
         /// <summary>
+        /// A flag we use to know when we should save. 
+        /// </summary>
+        private bool m_IsDiry = false;
+
+        /// <summary>
         /// The true value that this class holds.
         /// </summary>
         [Include]
-        private List<MemberAspect> m_Children;
+        private List<MemberAspect> m_Members;
+
+        [Include]
+        private List<MemberAspect> m_Aspects;
 
         public object[] targets
         {
@@ -38,7 +46,8 @@ namespace ReflectedInspector
 
         public ReflectedAspect(object[] targets)
         {
-            m_Children = new List<MemberAspect>();
+            m_Members = new List<MemberAspect>();
+            m_Aspects = new List<MemberAspect>();
 
             m_Targets = targets;
 
@@ -63,9 +72,9 @@ namespace ReflectedInspector
                 {
                     member = CreateAspectForType(fieldType, fileds[i].Name);
                 }
-  
 
-                m_Children.Add(member);
+
+                m_Members.Add(member);
             }
         }
 
@@ -134,8 +143,8 @@ namespace ReflectedInspector
             if (typeof(IDictionary).IsAssignableFrom(type))
             {
                 Type keyType = type.GetGenericArguments()[0];
-                
-                if( keyType == typeof(string) || keyType == typeof(int) || keyType == typeof(float))
+
+                if (keyType == typeof(string) || keyType == typeof(int) || keyType == typeof(float))
                 {
                     return new DictionaryAspect(this, aspectPath);
                 }
@@ -150,21 +159,43 @@ namespace ReflectedInspector
 
         public void ApplyModifiedChanges()
         {
-            for (int i = 0; i < m_Children.Count; i++)
+            for (int i = 0; i < m_Aspects.Count; i++)
             {
-                m_Children[i].SaveValue();
+                m_Aspects[i].SaveValue();
             }
         }
 
+        public void MarkDirty()
+        {
+            m_IsDiry = true;
+            ApplyModifiedChanges();
+        }
+
+        internal void AddAspect(MemberAspect aspect)
+        {
+            m_Aspects.Add(aspect);
+        }
+
+        internal void RemoveAspect(MemberAspect aspect)
+        {
+            m_Aspects.Remove(aspect);
+        }
 
         /// <summary>
         /// Handles the drawing logic for this array and all it's children.
         /// </summary>
         public void OnGUILayout()
         {
-            for (int i = 0; i < m_Children.Count; i++)
+            UnityEditor.EditorGUI.BeginChangeCheck();
             {
-                m_Children[i].OnGUI();
+                for (int i = 0; i < m_Members.Count; i++)
+                {
+                    m_Members[i].OnGUI();
+                }
+            }
+            if(UnityEditor.EditorGUI.EndChangeCheck())
+            {
+                ApplyModifiedChanges();
             }
         }
     }

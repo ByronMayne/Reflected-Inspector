@@ -150,6 +150,7 @@ namespace ReflectedInspector
             }
             this[index] = child;
             m_ElementCount++;
+            m_IsDiry = true;
         }
 
         /// <summary>
@@ -159,6 +160,7 @@ namespace ReflectedInspector
         public override void DeleteArrayElmentAtIndex(int index)
         {
             m_ElementCount--;
+            m_IsDiry = true;
         }
 
         /// <summary>

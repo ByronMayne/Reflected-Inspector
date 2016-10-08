@@ -20,6 +20,11 @@ namespace ReflectedInspector
         private bool m_IsExpanded;
 
         /// <summary>
+        /// A flag used to make when their value has changed.
+        /// </summary>
+        protected bool m_IsDiry = false;
+
+        /// <summary>
         /// The root object that owns this property.
         /// </summary>
         private ReflectedAspect m_ReflectedAspect;
@@ -403,6 +408,7 @@ namespace ReflectedInspector
         /// <param name="aspectPath"></param>
         public MemberAspect(ReflectedAspect reflectedAspect, string aspectPath)
         {
+            reflectedAspect.AddAspect(this);
             m_ReflectedAspect = reflectedAspect;
             SetAspectPath(aspectPath);
             LoadValue();
@@ -442,14 +448,17 @@ namespace ReflectedInspector
         /// </summary>
         public virtual void SaveValue()
         {
-            ReflectionHelper.SetFieldValue(aspectPath, reflectedAspect.targets[0], value);
-
-            var iterator = GetIterator();
-
-            while (iterator.MoveNext())
+            if(m_IsDiry)
             {
-                iterator.Current.SaveValue();
+                ReflectionHelper.SetFieldValue(aspectPath, reflectedAspect.targets[0], value);
+                m_IsDiry = false;
             }
+            //var iterator = GetIterator();
+
+            //while (iterator.MoveNext())
+            //{
+            //    iterator.Current.SaveValue();
+            //}
         }
 
         /// <summary>

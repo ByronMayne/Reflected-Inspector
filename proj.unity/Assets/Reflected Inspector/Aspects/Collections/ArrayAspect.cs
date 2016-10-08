@@ -43,6 +43,7 @@ namespace ReflectedInspector
         {
             base.InsetArrayElementAtIndex(index);
             UpdateElementNames();
+            m_IsDiry = true;
         }
 
         /// <summary>
@@ -52,10 +53,14 @@ namespace ReflectedInspector
         {
             if (index < m_Children.Count)
             {
-                m_Children.RemoveAt(index);
+                MemberAspect child = m_Children[index];
+                m_Children.Remove(child);
+                reflectedAspect.RemoveAspect(child);
+                child = null;
             }
             base.DeleteArrayElmentAtIndex(index);
             UpdateElementNames();
+            m_IsDiry = true;
         }
 
 
@@ -175,22 +180,25 @@ namespace ReflectedInspector
 
         public override void SaveValue()
         {
-            // Get the true type that we are using. 
-            Type workingType = GetWorkingType();
-            // Create a new instance
-            IList newList = Activator.CreateInstance(workingType) as IList;
-            // Get our default value for our new array
-            object defaultValue = ReflectionHelper.GetDefault(workingType);
-            // Insert null values for each of our children.
-            for(int i = 0;  i < m_Children.Count; i++)
+            if (m_IsDiry)
             {
-                // Insert null for class types and default for structs. 
-                newList.Add(defaultValue);
+                // Get the true type that we are using. 
+                Type workingType = GetWorkingType();
+                // Create a new instance
+                IList newList = Activator.CreateInstance(workingType) as IList;
+                // Get our default value for our new array
+                object defaultValue = ReflectionHelper.GetDefault(workingType);
+                // Insert null values for each of our children.
+                for (int i = 0; i < m_Children.Count; i++)
+                {
+                    // Insert null for class types and default for structs. 
+                    newList.Add(defaultValue);
+                }
+                // Set our local value.
+                m_Value = newList;
+                // Call the base to write it to our field.
+                base.SaveValue();
             }
-            // Set our local value.
-            m_Value = newList;
-            // Call the base to write it to our field.
-            base.SaveValue();
         }
 
         /// <summary>

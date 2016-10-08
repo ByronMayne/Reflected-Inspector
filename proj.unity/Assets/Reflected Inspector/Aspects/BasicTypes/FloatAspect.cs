@@ -37,7 +37,11 @@ namespace ReflectedInspector
 
             set
             {
-                m_Value = value;
+                if(m_Value != value)
+                {
+                    m_Value = value;
+                    m_IsDiry = true;
+                }
             }
         }
 
@@ -94,7 +98,7 @@ namespace ReflectedInspector
         {
             GUILayout.BeginHorizontal();
             {
-                m_Value = EditorGUILayout.FloatField(memberName, m_Value);
+                floatValue = EditorGUILayout.FloatField(memberName, m_Value);
                 base.OnGUI();
             }
             GUILayout.EndHorizontal();
