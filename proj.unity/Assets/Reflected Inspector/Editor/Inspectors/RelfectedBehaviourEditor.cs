@@ -2,21 +2,22 @@
 using UnityEditor;
 using UnityEngine;
 
+[CanEditMultipleObjects]
 [CustomEditor(typeof(ReflectedBehaviour), true)]
 public class RelfectedBehaviourEditor : Editor
 {
     //ReflectedObject m_ReflectedObject;
-    ReflectedAspect objectAspect;
+    ReflectedObject objectAspect;
 
     public void OnEnable()
     {
         //m_ReflectedObject = new ReflectedObject(targets);
-        objectAspect = new ReflectedAspect(targets);
+        objectAspect = new ReflectedObject(targets);
     }
 
     public void OnDisable()
     {
-        //m_ReflectedObject.ApplyModifiedFields();
+         //m_ReflectedObject.ApplyModifiedFields();
         objectAspect.ApplyModifiedChanges();
     }
 
