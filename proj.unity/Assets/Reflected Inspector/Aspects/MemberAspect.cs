@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using Type = System.Type;
@@ -15,24 +16,43 @@ namespace ReflectedInspector
         private string m_MemberName;
 
         /// <summary>
+        /// The field info that points to our member. 
+        /// </summary>
+        private FieldInfo m_FieldInfo;
+
+        /// <summary>
         /// Is this item expanded in the inspector?
         /// </summary>
         private bool m_IsExpanded;
 
         /// <summary>
+        /// A flag used to check if this aspect is watching two more more
+        /// objects with mixed values. 
+        /// </summary>
+        private bool m_HasMixedValues = false;
+
+        /// <summary>
         /// A flag used to make when their value has changed.
         /// </summary>
-        protected bool m_IsDiry = false;
+        protected bool m_IsDirty = false;
 
         /// <summary>
         /// The root object that owns this property.
         /// </summary>
-        private ReflectedAspect m_ReflectedAspect;
+        private ReflectedObject m_reflectedObject;
 
         /// <summary>
         /// The path to the aspect from our root object.
         /// </summary>
         private string m_AspectPath;
+
+        /// <summary>
+        /// Gets the field that this class is watching.
+        /// </summary>
+        protected FieldInfo fieldInfo
+        {
+            get { return m_FieldInfo; }
+        }
 
         #region -= Accessors =-
         /// <summary>
@@ -316,6 +336,14 @@ namespace ReflectedInspector
         #endregion
 
         /// <summary>
+        /// Is this aspect watching two or more objects with different values?
+        /// </summary>
+        public bool hasMixedValues
+        {
+            get { return m_HasMixedValues; }
+        }
+
+        /// <summary>
         /// Returns true if this value is an array.
         /// </summary>
         public virtual bool IsArray
@@ -348,15 +376,15 @@ namespace ReflectedInspector
         public virtual bool isExpanded
         {
             get { return m_IsExpanded; }
-            set { m_IsExpanded = value;  }
+            set { m_IsExpanded = value; }
         }
 
         /// <summary>
         /// Gets our owning object aspect
         /// </summary>
-        public ReflectedAspect reflectedAspect
+        public ReflectedObject reflectedObject
         {
-            get { return m_ReflectedAspect; }
+            get { return m_reflectedObject; }
         }
 
         /// <summary>
@@ -404,14 +432,14 @@ namespace ReflectedInspector
         /// <summary>
         /// Creates a new instance of a Member Aspect
         /// </summary>
-        /// <param name="reflectedAspect"></param>
+        /// <param name="reflectedObject"></param>
         /// <param name="aspectPath"></param>
-        public MemberAspect(ReflectedAspect reflectedAspect, string aspectPath)
+        public MemberAspect(ReflectedObject reflectedObject, FieldInfo field)
         {
-            reflectedAspect.AddAspect(this);
-            m_ReflectedAspect = reflectedAspect;
-            SetAspectPath(aspectPath);
-            LoadValue();
+            reflectedObject.AddAspect(this);
+            m_reflectedObject = reflectedObject;
+            m_FieldInfo = field;
+            m_MemberName = SequenceHelper.GetDisplayNameFromPath(field.Name);
         }
 
         /// <summary>
@@ -430,35 +458,57 @@ namespace ReflectedInspector
         }
 
         /// <summary>
-        /// Changes the member name and aspect path of this element.
+        /// Saves the value of this member to the target object
+        /// if that field name exists. 
         /// </summary>
-        internal virtual void SetAspectPath(string aspectPath)
+        /// <param name="saveTo">The object you want to save the value too</param>
+        internal virtual void SaveValue(object saveTo)
         {
-            m_AspectPath = aspectPath;
-            m_MemberName = SequenceHelper.GetDisplayNameFromPath(aspectPath);
+            if (m_IsDirty)
+            {
+                m_HasMixedValues = false;
+                fieldInfo.SetValue(saveTo, value);
+            }
         }
 
         /// <summary>
-        /// Called when this object should be loaded from disk.
+        /// Save can be called multiple times so instead of clearing the flag
+        /// there we do it here.
         /// </summary>
-        protected abstract void LoadValue();
+        internal virtual void ClearDirtyFlag()
+        {
+            m_IsDirty = false;
+        }
 
         /// <summary>
-        /// Called when this object should be saved to disk.
+        /// Loads a value from a target object if a field name
+        /// with the same type exists on that object. 
         /// </summary>
-        public virtual void SaveValue()
+        /// <param name="loadFrom">The object you want to load this members value from.</param>
+        internal virtual void LoadValue(object loadFrom)
         {
-            if(m_IsDiry)
-            {
-                ReflectionHelper.SetFieldValue(aspectPath, reflectedAspect.targets[0], value);
-                m_IsDiry = false;
-            }
-            //var iterator = GetIterator();
+            m_IsDirty = false;
+            m_HasMixedValues = false;
+        }
 
-            //while (iterator.MoveNext())
-            //{
-            //    iterator.Current.SaveValue();
-            //}
+        /// <summary>
+        /// Resets the flag that controls if we have mixed values or not
+        /// </summary>
+        internal void ResetMixedValues()
+        {
+            m_HasMixedValues = false;
+        }
+
+        /// <summary>
+        /// Checks the current value of this member against an object to see if they have the same value
+        /// if they don't an internal flag is set to mixed values. 
+        /// </summary>
+        internal virtual bool CheckForMixedValues(object loadFrom)
+        {
+            object lhs = value;
+            object rhs = fieldInfo.GetValue(loadFrom);
+            m_HasMixedValues = !Equals(lhs, rhs);
+            return m_HasMixedValues;
         }
 
         /// <summary>
@@ -485,7 +535,7 @@ namespace ReflectedInspector
         /// </summary>
         private MemberAspect Internal_CreateClone()
         {
-            MemberAspect clone = reflectedAspect.CreateAspectForType(aspectType, aspectPath);
+            MemberAspect clone = reflectedObject.CreateAspect(m_FieldInfo);
             clone.m_MemberName = m_MemberName;
             return clone;
         }
@@ -506,14 +556,14 @@ namespace ReflectedInspector
                 EditorGUI.BeginDisabledGroup(hasValue);
                 if (GUILayout.Button("+", EditorStyles.miniButtonLeft, GUILayout.ExpandWidth(false)))
                 {
-                    OnNewValueLoaded();
+                    CreateNewValue();
                 }
                 EditorGUI.EndDisabledGroup();
 
 
                 if (GUILayout.Button("&", EditorStyles.miniButtonMid, GUILayout.ExpandWidth(false)))
                 {
-                    OnPoloymorphicTypeAssigned();
+                    CreatePoloymorphicValue();
                 }
 
                 EditorGUI.BeginDisabledGroup(!hasValue);
@@ -525,12 +575,12 @@ namespace ReflectedInspector
             }
         }
 
-        protected virtual void OnNewValueLoaded()
+        protected virtual void CreateNewValue()
         {
 
         }
 
-        protected virtual void OnPoloymorphicTypeAssigned()
+        protected virtual void CreatePoloymorphicValue()
         {
         }
 

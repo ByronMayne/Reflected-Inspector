@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using TinyJSON;
 using UnityEditor;
 using UnityEngine;
@@ -14,6 +15,10 @@ namespace ReflectedInspector
         /// </summary>
         [Include]
         private bool m_Value;
+
+        public BoolAspect(ReflectedObject reflectedObject, FieldInfo field) : base(reflectedObject, field)
+        {
+        }
 
         /// <summary>
         /// Returns back typeof(bool) since this aspect is of that type. 
@@ -41,7 +46,7 @@ namespace ReflectedInspector
                 if (m_Value != value)
                 {
                     m_Value = value;
-                    m_IsDiry = true;
+                    m_IsDirty = true;
                 }
             }
         }
@@ -50,14 +55,6 @@ namespace ReflectedInspector
         /// Does this object have value?
         /// </summary>
         public override bool hasValue
-        {
-            get { return true; }
-        }
-
-        /// <summary>
-        /// Is this object a value type?
-        /// </summary>
-        protected override bool isValueType
         {
             get { return true; }
         }
@@ -73,27 +70,28 @@ namespace ReflectedInspector
             }
         }
 
-        public BoolAspect(ReflectedAspect objectAspect, string aspectPath) : base(objectAspect, aspectPath)
+        /// <summary>
+        /// Is this object a value type?
+        /// </summary>
+        protected override bool isValueType
         {
-
+            get { return true; }
         }
 
         /// <summary>
-        /// Called when this object should be loaded from disk.
+        /// Loads a value from a target object if a field name
+        /// with the same type exists on that object. 
         /// </summary>
-        protected override void LoadValue()
+        /// <param name="loadFrom">The object you want to load this members value from.</param>
+        internal override void LoadValue(object loadFrom)
         {
-            m_Value = ReflectionHelper.GetFieldValue<bool>(aspectPath, reflectedAspect.targets[0]);
-        }
+            if (loadFrom == null)
+            {
+                throw new System.NullReferenceException("Reflected Inspector: Can't load value from a null object");
+            }
 
-
-        /// <summary>
-        /// A function used to copy all members to a copy of this class. 
-        /// </summary>
-        protected override void CloneMembers(MemberAspect clone)
-        {
-            BoolAspect boolAspect = clone as BoolAspect;
-            boolAspect.m_Value = m_Value;
+            m_Value = (bool)fieldInfo.GetValue(loadFrom);
+            base.LoadValue(loadFrom);
         }
 
         public override void OnGUI()
@@ -104,6 +102,15 @@ namespace ReflectedInspector
                 base.OnGUI();
             }
             GUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// A function used to copy all members to a copy of this class. 
+        /// </summary>
+        protected override void CloneMembers(MemberAspect clone)
+        {
+            BoolAspect boolAspect = clone as BoolAspect;
+            boolAspect.m_Value = m_Value;
         }
     }
 }

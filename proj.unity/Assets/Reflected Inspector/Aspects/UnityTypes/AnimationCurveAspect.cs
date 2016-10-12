@@ -1,4 +1,5 @@
-﻿using TinyJSON;
+﻿using System.Reflection;
+using TinyJSON;
 using UnityEditor;
 using UnityEngine;
 using Type = System.Type;
@@ -14,15 +15,8 @@ namespace ReflectedInspector
         [Include]
         private AnimationCurve m_Value;
 
-        /// <summary>
-        /// Returns back typeof(float) since this aspect is of that type. 
-        /// </summary>
-        public override Type aspectType
+        public AnimationCurveAspect(ReflectedObject reflectedObject, FieldInfo field) : base(reflectedObject, field)
         {
-            get
-            {
-                return typeof(AnimationCurve);
-            }
         }
 
         /// <summary>
@@ -40,23 +34,25 @@ namespace ReflectedInspector
                 if (m_Value != value)
                 {
                     m_Value = value;
-                    m_IsDiry = true;
+                    m_IsDirty = true;
                 }
             }
         }
 
         /// <summary>
+        /// Returns back typeof(float) since this aspect is of that type. 
+        /// </summary>
+        public override Type aspectType
+        {
+            get
+            {
+                return typeof(AnimationCurve);
+            }
+        }
+        /// <summary>
         /// Does this object have value?
         /// </summary>
         public override bool hasValue
-        {
-            get { return true; }
-        }
-
-        /// <summary>
-        /// Is this object a value type?
-        /// </summary>
-        protected override bool isValueType
         {
             get { return true; }
         }
@@ -72,17 +68,21 @@ namespace ReflectedInspector
             }
         }
 
-        public AnimationCurveAspect(ReflectedAspect objectAspect, string aspectPath) : base(objectAspect, aspectPath)
-        {
-        }
-
-
         /// <summary>
-        /// Called when this object should be loaded from disk.
+        /// Is this object a value type?
         /// </summary>
-        protected override void LoadValue()
+        protected override bool isValueType
         {
-            m_Value = ReflectionHelper.GetFieldValue<AnimationCurve>(aspectPath, reflectedAspect.targets[0]);
+            get { return true; }
+        }
+        public override void OnGUI()
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                animationCurveValue = EditorGUILayout.CurveField(memberName, m_Value);
+                base.OnGUI();
+            }
+            EditorGUILayout.EndHorizontal();
         }
 
         /// <summary>
@@ -96,14 +96,20 @@ namespace ReflectedInspector
             cruveAspect.m_Value.preWrapMode = m_Value.preWrapMode;
         }
 
-        public override void OnGUI()
+        /// <summary>
+        /// Loads a value from a target object if a field name
+        /// with the same type exists on that object. 
+        /// </summary>
+        /// <param name="loadFrom">The object you want to load this members value from.</param>
+        internal override void LoadValue(object loadFrom)
         {
-            EditorGUILayout.BeginHorizontal();
+            if (loadFrom == null)
             {
-                animationCurveValue = EditorGUILayout.CurveField(memberName, m_Value);
-                base.OnGUI();
+                throw new System.NullReferenceException("Reflected Inspector: Can't load value from a null object");
             }
-            EditorGUILayout.EndHorizontal();
+
+            m_Value = (AnimationCurve)fieldInfo.GetValue(loadFrom);
+            base.LoadValue(loadFrom);
         }
     }
 }

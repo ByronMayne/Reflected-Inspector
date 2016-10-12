@@ -17,14 +17,10 @@ namespace ReflectedInspector
         private static GUIStyle m_NullStyle;
 
         /// <summary>
-        /// The root value of our object
+        /// The true value that this class holds.
         /// </summary>
-        private object m_Value;
-
-        /// <summary>
-        /// Is this class serializable by Unity?
-        /// </summary>
-        private bool m_IsUnitySerializable = false;
+        [Include]
+        private List<MemberAspect> m_Children;
 
         /// <summary>
         /// Is this item expanded in the editor?
@@ -32,20 +28,22 @@ namespace ReflectedInspector
         private bool m_IsExpanded = false;
 
         /// <summary>
-        /// The true value that this class holds.
+        /// Is this class serializable by Unity?
         /// </summary>
-        [Include]
-        private List<MemberAspect> m_Children;
+        private bool m_IsUnitySerializable = false;
 
         /// <summary>
-        /// The base type of the object
+        /// The root value of our object
         /// </summary>
-        private Type m_FieldType;
-
+        private object m_Value;
         /// <summary>
         /// The true type of the object.
         /// </summary>
         private Type m_ValueType;
+
+        public ObjectAspect(ReflectedObject reflectedObject, FieldInfo field) : base(reflectedObject, field)
+        {
+        }
 
         /// <summary>
         /// Returns back typeof(List<ArrayAspect>) since this aspect is of that type. 
@@ -74,17 +72,8 @@ namespace ReflectedInspector
         /// </summary>
         public override bool hasValue
         {
-            get { return m_Value != null || m_FieldType.IsValueType; }
+            get { return m_Value != null; }
         }
-
-        /// <summary>
-        /// Is this object a value type?
-        /// </summary>
-        protected override bool isValueType
-        {
-            get { return m_FieldType.IsValueType; }
-        }
-
 
         public override object value
         {
@@ -105,102 +94,13 @@ namespace ReflectedInspector
             }
         }
 
-        public ObjectAspect(ReflectedAspect objectAspect, string aspectPath) : base(objectAspect, aspectPath)
-        {
-        }
-
         /// <summary>
-        /// Called when this object should be loaded from disk.
+        /// Is this object a value type?
         /// </summary>
-        protected override void LoadValue()
+        protected override bool isValueType
         {
-            // We can only load children if we have a value.
-            m_Children = new List<MemberAspect>();
-
-            bool wasSuccessful = false;
-            FieldInfo fieldInfo;
-            m_Value = ReflectionHelper.GetFieldValue(aspectPath, reflectedAspect.targets[0], out wasSuccessful, out fieldInfo);
-            m_FieldType = fieldInfo.FieldType;
-
-            if (wasSuccessful && hasValue)
-            {
-                m_ValueType = m_Value.GetType();
-            }
-            else
-            {
-                m_ValueType = m_FieldType;
-            }
-
-            // Unity can't serialize interfaces
-            m_IsUnitySerializable = !m_ValueType.IsInterface;
-            // Or generic types
-            m_IsUnitySerializable &= !m_ValueType.IsGenericType;
-
-            if (m_IsUnitySerializable)
-            {
-                //TODO: Add a case for type of List<T>
-
-                if (typeof(MonoBehaviour).IsAssignableFrom(m_FieldType))
-                {
-                    // It's a component.
-                    m_IsUnitySerializable = true;
-                }
-
-                Attribute[] attributes = fieldInfo.GetCustomAttributes(true) as Attribute[];
-
-                for(int i = 0; i < attributes.Length; i++)
-                {
-                    Type attributeType = attributes[i].GetType();
-
-                    if( attributeType == typeof(System.SerializableAttribute))
-                    {
-                        m_IsUnitySerializable = true;
-                    }
-
-                    if( attributeType == typeof(System.NonSerializedAttribute))
-                    {
-                        m_IsUnitySerializable = false;
-                        break;
-                    }
-                }
-            }
-
-            LoadChildren();
+            get { return false; }
         }
-
-        /// <summary>
-        /// Iterates over a all elements.
-        /// </summary>
-        /// <returns></returns>
-        public override IEnumerator<MemberAspect> GetIterator()
-        {
-            // We never return our self. 
-            for (int i = 0; i < m_Children.Count; i++)
-            {
-                yield return m_Children[i];
-            }
-        }
-
-        /// <summary>
-        /// Loads all the children from our current value.
-        /// </summary>
-        private void LoadChildren()
-        {
-            if (hasValue)
-            {
-                FieldInfo[] fileds = m_ValueType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-                for (int i = 0; i < fileds.Length; i++)
-                {
-                    Type fieldType = fileds[i].FieldType;
-
-                    MemberAspect member = reflectedAspect.CreateAspectForType(fieldType, aspectPath + "." + fileds[i].Name);
-
-                    m_Children.Add(member);
-                }
-            }
-        }
-
         public override MemberAspect FindFieldRelative(string relativeName)
         {
             for (int i = 0; i < m_Children.Count; i++)
@@ -214,15 +114,15 @@ namespace ReflectedInspector
         }
 
         /// <summary>
-        /// A function used to copy all members to a copy of this class. 
+        /// Iterates over a all elements.
         /// </summary>
-        protected override void CloneMembers(MemberAspect clone)
+        /// <returns></returns>
+        public override IEnumerator<MemberAspect> GetIterator()
         {
-            ObjectAspect objectAspect = clone as ObjectAspect;
+            // We never return our self. 
             for (int i = 0; i < m_Children.Count; i++)
             {
-                MemberAspect childClone = m_Children[i].Copy();
-                objectAspect.m_Children.Add(childClone);
+                yield return m_Children[i];
             }
         }
 
@@ -262,22 +162,139 @@ namespace ReflectedInspector
             }
         }
 
+        /// <summary>
+        /// A function used to copy all members to a copy of this class. 
+        /// </summary>
+        protected override void CloneMembers(MemberAspect clone)
+        {
+            ObjectAspect objectAspect = clone as ObjectAspect;
+            for (int i = 0; i < m_Children.Count; i++)
+            {
+                MemberAspect childClone = m_Children[i].Copy();
+                objectAspect.m_Children.Add(childClone);
+            }
+        }
+
+        internal override void LoadValue(object loadFrom)
+        {
+            m_Children = new List<MemberAspect>();
+            m_Value = fieldInfo.GetValue(loadFrom);
+
+            if (m_Value != null)
+            {
+                m_ValueType = m_Value.GetType();
+            }
+            else
+            {
+                m_ValueType = fieldInfo.FieldType;
+            }
+
+            // Set our flag if Unity can serialize us.
+            CheckIfSerializableByUnity();
+            // Load all our fields. 
+            LoadChildren();
+        }
+
+        /// <summary>
+        /// Checks our value type to see if Unity can serialize it.
+        /// </summary>
+        private void CheckIfSerializableByUnity()
+        {
+            // Unity can't serialize interfaces
+            m_IsUnitySerializable = !m_ValueType.IsInterface;
+            // Or generic types
+            m_IsUnitySerializable &= !m_ValueType.IsGenericType;
+
+            if (m_IsUnitySerializable)
+            {
+                if (typeof(MonoBehaviour).IsAssignableFrom(fieldInfo.FieldType))
+                {
+                    // It's a component.
+                    m_IsUnitySerializable = true;
+                }
+
+                Attribute[] attributes = fieldInfo.GetCustomAttributes(true) as Attribute[];
+
+                for (int i = 0; i < attributes.Length; i++)
+                {
+                    Type attributeType = attributes[i].GetType();
+
+                    if (attributeType == typeof(System.SerializableAttribute))
+                    {
+                        m_IsUnitySerializable = true;
+                    }
+
+                    if (attributeType == typeof(System.NonSerializedAttribute))
+                    {
+                        m_IsUnitySerializable = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        internal override void SaveValue(object saveTo)
+        {
+            base.SaveValue(saveTo);
+        }
+
         protected override void OnAspectSetToNull()
         {
             m_Value = null;
             m_Children.Clear();
         }
 
-        protected override void OnNewValueLoaded()
+        protected override void CreateNewValue()
         {
-            m_Value = System.Activator.CreateInstance(m_FieldType, nonPublic: true);
+            m_ValueType = fieldInfo.FieldType;
+            m_Value = System.Activator.CreateInstance(fieldInfo.FieldType, nonPublic: true);
             LoadChildren();
         }
 
-        protected override void OnPoloymorphicTypeAssigned()
+        protected override void CreatePoloymorphicValue()
         {
-            m_Value = System.Activator.CreateInstance(m_ValueType, nonPublic: true);
+
+            Assembly assembly = Assembly.GetCallingAssembly();
+
+            Type[] types = assembly.GetTypes();
+            GenericMenu typesMenu = new GenericMenu();
+            for(int i = 0; i < types.Length; i++)
+            {
+                if(!types[i].IsAbstract && fieldInfo.FieldType.IsAssignableFrom(types[i]))
+                {
+                    typesMenu.AddItem(new GUIContent(types[i].Name), false, OnPolomorphicTypeChagned, types[i]);
+                }
+            }
+
+            typesMenu.ShowAsContext();
+        }
+
+        private void OnPolomorphicTypeChagned(object value)
+        {
+            m_ValueType = (Type)value;
+            m_Value = System.Activator.CreateInstance((Type)value, nonPublic: true);
+            
             LoadChildren();
+        }
+
+        /// <summary>
+        /// Loads all the children from our current value.
+        /// </summary>
+        private void LoadChildren()
+        {
+            if (hasValue)
+            {
+                FieldInfo[] fields = m_ValueType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    object value = fields[i].GetValue(m_Value);
+
+                    MemberAspect member = reflectedObject.CreateAspect(fields[i], value);
+
+                    m_Children.Add(member);
+                }
+            }
         }
     }
 }

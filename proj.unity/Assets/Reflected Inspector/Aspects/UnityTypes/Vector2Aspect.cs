@@ -1,4 +1,5 @@
-﻿using TinyJSON;
+﻿using System.Reflection;
+using TinyJSON;
 using UnityEditor;
 using UnityEngine;
 using Type = System.Type;
@@ -14,6 +15,10 @@ namespace ReflectedInspector
         [Include]
         private Vector2 m_Value;
 
+        public Vector2Aspect(ReflectedObject reflectedObject, FieldInfo field) : base(reflectedObject, field)
+        {
+        }
+
         /// <summary>
         /// Returns back typeof(float) since this aspect is of that type. 
         /// </summary>
@@ -22,6 +27,25 @@ namespace ReflectedInspector
             get
             {
                 return typeof(Vector2);
+            }
+        }
+
+        /// <summary>
+        /// Does this object have value?
+        /// </summary>
+        public override bool hasValue
+        {
+            get { return true; }
+        }
+
+        /// <summary>
+        /// Returns the raw value of the object.
+        /// </summary>
+        public override object value
+        {
+            get
+            {
+                return m_Value;
             }
         }
 
@@ -40,19 +64,10 @@ namespace ReflectedInspector
                 if (m_Value != value)
                 {
                     m_Value = value;
-                    m_IsDiry = true;
+                    m_IsDirty = true;
                 }
             }
         }
-
-        /// <summary>
-        /// Does this object have value?
-        /// </summary>
-        public override bool hasValue
-        {
-            get { return true; }
-        }
-
         /// <summary>
         /// Is this object a value type?
         /// </summary>
@@ -60,29 +75,14 @@ namespace ReflectedInspector
         {
             get { return true; }
         }
-
-        /// <summary>
-        /// Returns the raw value of the object.
-        /// </summary>
-        public override object value
+        public override void OnGUI()
         {
-            get
+            EditorGUILayout.BeginHorizontal();
             {
-                return m_Value;
+                vector2Value = EditorGUILayout.Vector2Field(memberName, m_Value);
+                base.OnGUI();
             }
-        }
-
-        public Vector2Aspect(ReflectedAspect objectAspect, string aspectPath) : base(objectAspect, aspectPath)
-        {
-        }
-
-
-        /// <summary>
-        /// Called when this object should be loaded from disk.
-        /// </summary>
-        protected override void LoadValue()
-        {
-            m_Value = ReflectionHelper.GetFieldValue<Vector2>(aspectPath, reflectedAspect.targets[0]);
+            EditorGUILayout.EndHorizontal();
         }
 
         /// <summary>
@@ -94,14 +94,20 @@ namespace ReflectedInspector
             vect2Aspect.m_Value = m_Value;
         }
 
-        public override void OnGUI()
+        /// <summary>
+        /// Loads a value from a target object if a field name
+        /// with the same type exists on that object. 
+        /// </summary>
+        /// <param name="loadFrom">The object you want to load this members value from.</param>
+        internal override void LoadValue(object loadFrom)
         {
-            EditorGUILayout.BeginHorizontal();
+            if (loadFrom == null)
             {
-                vector2Value = EditorGUILayout.Vector2Field(memberName, m_Value);
-                base.OnGUI();
+                throw new System.NullReferenceException("Reflected Inspector: Can't load value from a null object");
             }
-            EditorGUILayout.EndHorizontal();
+
+            m_Value = (Vector2)fieldInfo.GetValue(loadFrom);
+            base.LoadValue(loadFrom);
         }
     }
 }

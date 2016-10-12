@@ -1,4 +1,5 @@
-﻿using TinyJSON;
+﻿using System.Reflection;
+using TinyJSON;
 using UnityEditor;
 using Type = System.Type;
 
@@ -13,6 +14,10 @@ namespace ReflectedInspector
         [Include]
         private string m_Value;
 
+        public StringAspect(ReflectedObject reflectedObject, FieldInfo field) : base(reflectedObject, field)
+        {
+        }
+
         /// <summary>
         /// Returns back typeof(String) since this aspect is of that type. 
         /// </summary>
@@ -22,6 +27,14 @@ namespace ReflectedInspector
             {
                 return typeof(string);
             }
+        }
+
+        /// <summary>
+        /// Does this object have value?
+        /// </summary>
+        public override bool hasValue
+        {
+            get { return m_Value != null; }
         }
 
         /// <summary>
@@ -39,27 +52,10 @@ namespace ReflectedInspector
                 if (m_Value != value)
                 {
                     m_Value = value;
-                    m_IsDiry = true;
+                    m_IsDirty = true;
                 }
             }
         }
-
-        /// <summary>
-        /// Does this object have value?
-        /// </summary>
-        public override bool hasValue
-        {
-            get { return m_Value != null; }
-        }
-
-        /// <summary>
-        /// Is this object a value type?
-        /// </summary>
-        protected override bool isValueType
-        {
-            get { return false; }
-        }
-
         /// <summary>
         /// Returns the raw value of the object.
         /// </summary>
@@ -71,23 +67,22 @@ namespace ReflectedInspector
             }
         }
 
-        public StringAspect(ReflectedAspect objectAspect, string aspectPath) : base(objectAspect, aspectPath)
-        {
-
-        }
-
-
         /// <summary>
-        /// Called when this object should be loaded from disk.
+        /// Is this object a value type?
         /// </summary>
-        protected override void LoadValue()
+        protected override bool isValueType
         {
-            if (!string.IsNullOrEmpty(aspectPath))
-            {
-                m_Value = ReflectionHelper.GetFieldValue<string>(aspectPath, reflectedAspect.targets[0]);
-            }
+            get { return false; }
         }
-
+        public override void OnGUI()
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                stringValue = EditorGUILayout.TextField(memberName, m_Value);
+                base.OnGUI();
+            }
+            EditorGUILayout.EndHorizontal();
+        }
 
         /// <summary>
         /// A function used to copy all members to a copy of this class. 
@@ -98,14 +93,20 @@ namespace ReflectedInspector
             stringAspect.m_Value = m_Value;
         }
 
-        public override void OnGUI()
+        /// <summary>
+        /// Loads a value from a target object if a field name
+        /// with the same type exists on that object. 
+        /// </summary>
+        /// <param name="loadFrom">The object you want to load this members value from.</param>
+        internal override void LoadValue(object loadFrom)
         {
-            EditorGUILayout.BeginHorizontal();
+            if (loadFrom == null)
             {
-                stringValue = EditorGUILayout.TextField(memberName, m_Value);
-                base.OnGUI();
+                throw new System.NullReferenceException("Reflected Inspector: Can't load value from a null object");
             }
-            EditorGUILayout.EndHorizontal();
+
+            m_Value = (string)fieldInfo.GetValue(loadFrom);
+            base.LoadValue(loadFrom);
         }
     }
 }

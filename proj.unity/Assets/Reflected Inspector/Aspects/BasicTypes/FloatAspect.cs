@@ -1,4 +1,5 @@
-﻿using TinyJSON;
+﻿using System.Reflection;
+using TinyJSON;
 using UnityEditor;
 using UnityEngine;
 using Type = System.Type;
@@ -13,6 +14,10 @@ namespace ReflectedInspector
         /// </summary>
         [Include]
         private float m_Value;
+
+        public FloatAspect(ReflectedObject reflectedObject, FieldInfo field) : base(reflectedObject, field)
+        {
+        }
 
         /// <summary>
         /// Returns back typeof(float) since this aspect is of that type. 
@@ -40,7 +45,7 @@ namespace ReflectedInspector
                 if(m_Value != value)
                 {
                     m_Value = value;
-                    m_IsDiry = true;
+                    m_IsDirty = true;
                 }
             }
         }
@@ -72,19 +77,6 @@ namespace ReflectedInspector
             }
         }
 
-        public FloatAspect(ReflectedAspect objectAspect, string aspectPath) : base(objectAspect, aspectPath)
-        { }
-
-
-
-        /// <summary>
-        /// Called when this object should be loaded from disk.
-        /// </summary>
-        protected override void LoadValue()
-        {
-            m_Value = ReflectionHelper.GetFieldValue<float>(aspectPath, reflectedAspect.targets[0]);
-        }
-
         /// <summary>
         /// A function used to copy all members to a copy of this class. 
         /// </summary>
@@ -102,6 +94,22 @@ namespace ReflectedInspector
                 base.OnGUI();
             }
             GUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// Loads a value from a target object if a field name
+        /// with the same type exists on that object. 
+        /// </summary>
+        /// <param name="loadFrom">The object you want to load this members value from.</param>
+        internal override void LoadValue(object loadFrom)
+        {
+            if (loadFrom == null)
+            {
+                throw new System.NullReferenceException("Reflected Inspector: Can't load value from a null object");
+            }
+
+            m_Value = (float)fieldInfo.GetValue(loadFrom);
+            base.LoadValue(loadFrom);
         }
     }
 }

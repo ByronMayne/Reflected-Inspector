@@ -1,4 +1,5 @@
-﻿using TinyJSON;
+﻿using System.Reflection;
+using TinyJSON;
 using UnityEditor;
 using UnityEngine;
 using Type = System.Type;
@@ -13,6 +14,10 @@ namespace ReflectedInspector
         /// </summary>
         [Include]
         private Bounds m_Value;
+
+        public BoundsAspect(ReflectedObject reflectedObject, FieldInfo field) : base(reflectedObject, field)
+        {
+        }
 
         /// <summary>
         /// Returns back typeof(float) since this aspect is of that type. 
@@ -40,7 +45,7 @@ namespace ReflectedInspector
                 if (m_Value != value)
                 {
                     m_Value = value;
-                    m_IsDiry = true;
+                    m_IsDirty = true;
                 }
             }
         }
@@ -49,14 +54,6 @@ namespace ReflectedInspector
         /// Does this object have value?
         /// </summary>
         public override bool hasValue
-        {
-            get { return true; }
-        }
-
-        /// <summary>
-        /// Is this object a value type?
-        /// </summary>
-        protected override bool isValueType
         {
             get { return true; }
         }
@@ -72,17 +69,22 @@ namespace ReflectedInspector
             }
         }
 
-        public BoundsAspect(ReflectedAspect objectAspect, string aspectPath) : base(objectAspect, aspectPath)
-        {
-        }
-
-
         /// <summary>
-        /// Called when this object should be loaded from disk.
+        /// Is this object a value type?
         /// </summary>
-        protected override void LoadValue()
+        protected override bool isValueType
         {
-            m_Value = ReflectionHelper.GetFieldValue<Bounds>(aspectPath, reflectedAspect.targets[0]);
+            get { return true; }
+        }
+        public override void OnGUI()
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                boundsValue = EditorGUILayout.BoundsField(memberName, m_Value);
+                base.OnGUI();
+            }
+            EditorGUILayout.EndHorizontal();
+
         }
 
         /// <summary>
@@ -94,15 +96,20 @@ namespace ReflectedInspector
             boundsAspect.m_Value = m_Value;
         }
 
-        public override void OnGUI()
+        /// <summary>
+        /// Loads a value from a target object if a field name
+        /// with the same type exists on that object. 
+        /// </summary>
+        /// <param name="loadFrom">The object you want to load this members value from.</param>
+        internal override void LoadValue(object loadFrom)
         {
-            EditorGUILayout.BeginHorizontal();
+            if (loadFrom == null)
             {
-                boundsValue = EditorGUILayout.BoundsField(memberName, m_Value);
-                base.OnGUI();
+                throw new System.NullReferenceException("Reflected Inspector: Can't load value from a null object");
             }
-            EditorGUILayout.EndHorizontal();
 
+            m_Value = (Bounds)fieldInfo.GetValue(loadFrom);
+            base.LoadValue(loadFrom);
         }
     }
 }
