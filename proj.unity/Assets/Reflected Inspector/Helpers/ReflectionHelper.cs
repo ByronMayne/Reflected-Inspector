@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 public static class ReflectionHelper
 {
@@ -347,6 +348,47 @@ public static class ReflectionHelper
             return Activator.CreateInstance(type);
         }
         return null;
+    }
+
+    /// <summary>
+    /// Checks our value type to see if Unity can serialize it.
+    /// </summary>
+    public static bool CheckIfSerializableByUnity(Type type)
+    {
+        bool isUnitySerializable = false;
+
+        // Unity can't serialize interfaces
+        isUnitySerializable = !type.IsInterface;
+        // Or generic types
+        isUnitySerializable &= !type.IsGenericType;
+
+        if (isUnitySerializable)
+        {
+            if (typeof(MonoBehaviour).IsAssignableFrom(type))
+            {
+                // It's a component.
+                isUnitySerializable = true;
+            }
+
+            Attribute[] attributes = type.GetCustomAttributes(true) as Attribute[];
+
+            for (int i = 0; i < attributes.Length; i++)
+            {
+                Type attributeType = attributes[i].GetType();
+
+                if (attributeType == typeof(System.SerializableAttribute))
+                {
+                    isUnitySerializable = true;
+                }
+
+                if (attributeType == typeof(System.NonSerializedAttribute))
+                {
+                    isUnitySerializable = false;
+                    break;
+                }
+            }
+        }
+        return isUnitySerializable;
     }
 
 }

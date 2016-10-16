@@ -5,6 +5,8 @@ using UnityEditor;
 using System.Reflection;
 using UnityEngine;
 using TinyJSON;
+using System;
+using System.Linq;
 
 namespace ReflectedInspector
 {
@@ -36,6 +38,7 @@ namespace ReflectedInspector
         /// The root value of our object
         /// </summary>
         private object m_Value;
+
         /// <summary>
         /// The true type of the object.
         /// </summary>
@@ -75,6 +78,9 @@ namespace ReflectedInspector
             get { return m_Value != null; }
         }
 
+        /// <summary>
+        /// Gets the raw value of this object. 
+        /// </summary>
         public override object value
         {
             get
@@ -99,8 +105,13 @@ namespace ReflectedInspector
         /// </summary>
         protected override bool isValueType
         {
-            get { return false; }
+            get { return fieldInfo.FieldType.IsValueType; }
         }
+
+        /// <summary>
+        /// Finds a child with the name. 
+        /// </summary>
+        /// <param name="relativeName">The name you want to find.</param>
         public override MemberAspect FindFieldRelative(string relativeName)
         {
             for (int i = 0; i < m_Children.Count; i++)
@@ -139,21 +150,31 @@ namespace ReflectedInspector
                 }
                 else
                 {
-                    if (m_NullStyle == null)
-                    {
-                        m_NullStyle = new GUIStyle("ChannelStripAttenuationMarkerSquare");
-                        m_NullStyle.fontStyle = FontStyle.Italic;
-                    }
-                    EditorGUILayout.LabelField(memberName, "Null", m_NullStyle, GUILayout.ExpandWidth(false));
-                    GUILayout.FlexibleSpace();
+                    GUILayout.Label(memberName);
                 }
-                base.OnGUI();
+
+                Rect buttonRect = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.popup);
+
+                if (hasValue)
+                {
+                    GUI.Label(buttonRect, m_ValueType.FullName, EditorStyles.popup);
+                }
+                else
+                {
+                    GUI.Label(buttonRect, "Null", EditorStyles.popup);
+                }
+
+                if(Event.current.type == EventType.MouseDown && buttonRect.Contains(Event.current.mousePosition))
+                {
+                    ShowTypeOptions();
+
+                }
             }
             EditorGUILayout.EndHorizontal();
-
             if (m_IsExpanded)
             {
                 EditorGUI.indentLevel++;
+
                 for (int i = 0; i < m_Children.Count; i++)
                 {
                     m_Children[i].OnGUI();
@@ -175,6 +196,10 @@ namespace ReflectedInspector
             }
         }
 
+        /// <summary>
+        /// Loads this objects value from a target. 
+        /// </summary>
+        /// <param name="loadFrom">The object we want to load the values from.</param>
         internal override void LoadValue(object loadFrom)
         {
             m_Children = new List<MemberAspect>();
@@ -189,92 +214,148 @@ namespace ReflectedInspector
                 m_ValueType = fieldInfo.FieldType;
             }
 
-            // Set our flag if Unity can serialize us.
-            CheckIfSerializableByUnity();
             // Load all our fields. 
             LoadChildren();
         }
 
         /// <summary>
-        /// Checks our value type to see if Unity can serialize it.
+        /// Deletes our value and destroys all it's children.
         /// </summary>
-        private void CheckIfSerializableByUnity()
-        {
-            // Unity can't serialize interfaces
-            m_IsUnitySerializable = !m_ValueType.IsInterface;
-            // Or generic types
-            m_IsUnitySerializable &= !m_ValueType.IsGenericType;
-
-            if (m_IsUnitySerializable)
-            {
-                if (typeof(MonoBehaviour).IsAssignableFrom(fieldInfo.FieldType))
-                {
-                    // It's a component.
-                    m_IsUnitySerializable = true;
-                }
-
-                Attribute[] attributes = fieldInfo.GetCustomAttributes(true) as Attribute[];
-
-                for (int i = 0; i < attributes.Length; i++)
-                {
-                    Type attributeType = attributes[i].GetType();
-
-                    if (attributeType == typeof(System.SerializableAttribute))
-                    {
-                        m_IsUnitySerializable = true;
-                    }
-
-                    if (attributeType == typeof(System.NonSerializedAttribute))
-                    {
-                        m_IsUnitySerializable = false;
-                        break;
-                    }
-                }
-            }
-        }
-
-        internal override void SaveValue(object saveTo)
-        {
-            base.SaveValue(saveTo);
-        }
-
-        protected override void OnAspectSetToNull()
+        protected override void DestroyInstance()
         {
             m_Value = null;
             m_Children.Clear();
         }
 
-        protected override void CreateNewValue()
+        /// <summary>
+        /// Creates a new instance for out type . 
+        /// </summary>
+        protected override void RevertTOFieldType()
         {
             m_ValueType = fieldInfo.FieldType;
             m_Value = System.Activator.CreateInstance(fieldInfo.FieldType, nonPublic: true);
             LoadChildren();
         }
 
-        protected override void CreatePoloymorphicValue()
+        /// <summary>
+        /// Creates a menu item to show all the types that this object can be. Lets the user pick one
+        /// and converts our object to that type. 
+        /// </summary>
+        protected override void ShowTypeOptions()
         {
 
             Assembly assembly = Assembly.GetCallingAssembly();
 
             Type[] types = assembly.GetTypes();
             GenericMenu typesMenu = new GenericMenu();
-            for(int i = 0; i < types.Length; i++)
+            typesMenu.AddItem(new GUIContent("Null"), false, DestroyInstance);
+            for (int i = 0; i < types.Length; i++)
             {
-                if(!types[i].IsAbstract && fieldInfo.FieldType.IsAssignableFrom(types[i]))
+                if (!types[i].IsAbstract && fieldInfo.FieldType.IsAssignableFrom(types[i]))
                 {
-                    typesMenu.AddItem(new GUIContent(types[i].Name), false, OnPolomorphicTypeChagned, types[i]);
+                    Type type = types[i];
+                    typesMenu.AddItem(new GUIContent(types[i].Name), false, ()=> { AssignType(type); });
                 }
             }
 
             typesMenu.ShowAsContext();
         }
 
-        private void OnPolomorphicTypeChagned(object value)
+        /// <summary>
+        /// Used to assign our object a type if our value is currently null this creates
+        /// a new instance otherwise it will convert our type. 
+        /// </summary>
+        /// <param name="type"></param>
+        public void AssignType(Type type)
         {
-            m_ValueType = (Type)value;
-            m_Value = System.Activator.CreateInstance((Type)value, nonPublic: true);
-            
+            if(!hasValue)
+            {
+                CreateNewInstanceOfType(type);
+            }
+            else if( type != m_ValueType )
+            {
+                ConvertType(type);
+            }
+        }
+
+        /// <summary>
+        /// Creates a new instance to overwrite our old one. If any value has already
+        /// been set it will be cleared.
+        /// </summary>
+        /// <param name="type">The new type instance you want to create</param>
+        private void CreateNewInstanceOfType(Type type)
+        {
+            m_ValueType = type;
+            m_Value = System.Activator.CreateInstance(type, nonPublic: true);
             LoadChildren();
+        }
+
+        /// <summary>
+        /// Takes our current instance and converts it into a new type. This preserves all values
+        /// that have the same name. If we don't currently value a value you should call
+        /// <see cref="CreateNewInstanceOfType(Type)"/>. If our value is already that type this
+        /// function has no effect. 
+        /// </summary>
+        /// <param name="newType">The type you want to convert too.</param>
+        protected virtual void ConvertType(Type newType)
+        {
+            // Our new type is null so we don't need to convert.
+            if (newType == null)
+            {
+                DestroyInstance();
+                return;
+            }
+
+            // We are already this type no point running our logic.
+            if (newType == m_ValueType)
+            {
+                return;
+            }
+
+            // We have not type assigned so we can just create a new one.
+            if (!hasValue)
+            {
+                Debug.LogWarning("Can't Convert Type if we have no current instance set");
+                CreateNewInstanceOfType(newType);
+            }
+
+            FieldInfo[] newFields = newType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            // First remove extra fields
+            for (int i = m_Children.Count - 1; i >= 0; i--)
+            {
+                if (!newFields.Any(nf => { return nf.Name == m_Children[i].fieldInfo.Name; }))
+                {
+                    // This field does not exist on our new type.
+                    m_Children.RemoveAt(i);
+                }
+            }
+
+            List<MemberAspect> sortedChildren = new List<MemberAspect>();
+
+            for (int i = 0; i < newFields.Length; i++)
+            {
+                // Find this asepct if we have one
+                MemberAspect child = m_Children.Where(aspect => { return aspect.fieldInfo.Name == newFields[i].Name; }).FirstOrDefault();
+
+                if (child != null)
+                {
+                    sortedChildren.Add(child);
+                }
+                else
+                {
+                    MemberAspect member = reflectedObject.CreateAspect(newFields[i], null);
+
+                    sortedChildren.Add(member);
+                }
+            }
+
+            // Save our children  
+            m_Children = sortedChildren;
+            // Save our new type.
+            m_ValueType = newType;
+            // Create a new value. 
+            m_Value = System.Activator.CreateInstance(m_ValueType, nonPublic: true);
         }
 
         /// <summary>

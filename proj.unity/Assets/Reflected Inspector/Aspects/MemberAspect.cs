@@ -15,6 +15,8 @@ namespace ReflectedInspector
         /// </summary>
         private string m_MemberName;
 
+        private string m_FieldName;
+
         /// <summary>
         /// The field info that points to our member. 
         /// </summary>
@@ -49,7 +51,7 @@ namespace ReflectedInspector
         /// <summary>
         /// Gets the field that this class is watching.
         /// </summary>
-        protected FieldInfo fieldInfo
+        public FieldInfo fieldInfo
         {
             get { return m_FieldInfo; }
         }
@@ -550,41 +552,19 @@ namespace ReflectedInspector
         /// </summary>
         public virtual void OnGUI()
         {
-            // We can't do nulls with value types.
-            if (!isValueType)
-            {
-                EditorGUI.BeginDisabledGroup(hasValue);
-                if (GUILayout.Button("+", EditorStyles.miniButtonLeft, GUILayout.ExpandWidth(false)))
-                {
-                    CreateNewValue();
-                }
-                EditorGUI.EndDisabledGroup();
 
-
-                if (GUILayout.Button("&", EditorStyles.miniButtonMid, GUILayout.ExpandWidth(false)))
-                {
-                    CreatePoloymorphicValue();
-                }
-
-                EditorGUI.BeginDisabledGroup(!hasValue);
-                if (GUILayout.Button("x", EditorStyles.miniButtonRight, GUILayout.ExpandWidth(false)))
-                {
-                    OnAspectSetToNull();
-                }
-                EditorGUI.EndDisabledGroup();
-            }
         }
 
-        protected virtual void CreateNewValue()
+        protected virtual void RevertTOFieldType()
         {
 
         }
 
-        protected virtual void CreatePoloymorphicValue()
+        protected virtual void ShowTypeOptions()
         {
         }
 
-        protected virtual void OnAspectSetToNull()
+        protected virtual void DestroyInstance()
         {
         }
     }
