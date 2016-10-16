@@ -78,12 +78,7 @@ namespace ReflectedInspector
         }
         public override void OnGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            {
-                colorValue = EditorGUILayout.ColorField(memberName, m_Value);
-                base.OnGUI();
-            }
-            EditorGUILayout.EndHorizontal();
+            colorValue = EditorGUILayout.ColorField(memberName, m_Value);
         }
 
         /// <summary>

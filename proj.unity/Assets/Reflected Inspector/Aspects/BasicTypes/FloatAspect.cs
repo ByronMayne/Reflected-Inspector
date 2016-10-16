@@ -42,7 +42,7 @@ namespace ReflectedInspector
 
             set
             {
-                if(m_Value != value)
+                if (m_Value != value)
                 {
                     m_Value = value;
                     m_IsDirty = true;
@@ -88,12 +88,7 @@ namespace ReflectedInspector
 
         public override void OnGUI()
         {
-            GUILayout.BeginHorizontal();
-            {
-                floatValue = EditorGUILayout.FloatField(memberName, m_Value);
-                base.OnGUI();
-            }
-            GUILayout.EndHorizontal();
+            floatValue = EditorGUILayout.FloatField(memberName, m_Value);
         }
 
         /// <summary>

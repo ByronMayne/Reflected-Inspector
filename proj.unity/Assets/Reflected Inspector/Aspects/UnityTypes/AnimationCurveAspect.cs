@@ -77,12 +77,7 @@ namespace ReflectedInspector
         }
         public override void OnGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            {
-                animationCurveValue = EditorGUILayout.CurveField(memberName, m_Value);
-                base.OnGUI();
-            }
-            EditorGUILayout.EndHorizontal();
+            animationCurveValue = EditorGUILayout.CurveField(memberName, m_Value);
         }
 
         /// <summary>

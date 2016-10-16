@@ -80,7 +80,6 @@ namespace ReflectedInspector
             EditorGUILayout.BeginHorizontal();
             {
                 vector3Value = EditorGUILayout.Vector3Field(memberName, m_Value);
-                base.OnGUI();
             }
             EditorGUILayout.EndHorizontal();
         }

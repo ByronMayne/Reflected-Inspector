@@ -96,12 +96,7 @@ namespace ReflectedInspector
 
         public override void OnGUI()
         {
-            GUILayout.BeginHorizontal();
-            {
-                boolValue = EditorGUILayout.Toggle(memberName, m_Value);
-                base.OnGUI();
-            }
-            GUILayout.EndHorizontal();
+            boolValue = EditorGUILayout.Toggle(memberName, m_Value);
         }
 
         /// <summary>

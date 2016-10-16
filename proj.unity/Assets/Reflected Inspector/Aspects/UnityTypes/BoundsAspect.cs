@@ -78,13 +78,7 @@ namespace ReflectedInspector
         }
         public override void OnGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            {
-                boundsValue = EditorGUILayout.BoundsField(memberName, m_Value);
-                base.OnGUI();
-            }
-            EditorGUILayout.EndHorizontal();
-
+            boundsValue = EditorGUILayout.BoundsField(memberName, m_Value);
         }
 
         /// <summary>
