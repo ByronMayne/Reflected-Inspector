@@ -142,35 +142,36 @@ namespace ReflectedInspector
         /// </summary>
         public override void OnGUI()
         {
-            EditorGUILayout.BeginHorizontal();
+
+            Rect buttonRect = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.popup);
+            buttonRect.width = EditorGUIUtility.labelWidth;
+
+            if (hasValue)
             {
-                if (hasValue)
-                {
-                    m_IsExpanded = EditorGUILayout.Foldout(m_IsExpanded, memberName);
-                }
-                else
-                {
-                    GUILayout.Label(memberName);
-                }
-
-                Rect buttonRect = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.popup);
-
-                if (hasValue)
-                {
-                    GUI.Label(buttonRect, m_ValueType.FullName, EditorStyles.popup);
-                }
-                else
-                {
-                    GUI.Label(buttonRect, "Null", EditorStyles.popup);
-                }
-
-                if(Event.current.type == EventType.MouseDown && buttonRect.Contains(Event.current.mousePosition))
-                {
-                    ShowTypeOptions();
-
-                }
+                m_IsExpanded = EditorGUI.Foldout(buttonRect, m_IsExpanded, memberName);
             }
-            EditorGUILayout.EndHorizontal();
+            else
+            {
+                GUI.Label(buttonRect, memberName);
+            }
+
+            buttonRect.x += buttonRect.width;
+            buttonRect.width = EditorGUIUtility.currentViewWidth - buttonRect.width - EditorGUIUtility.singleLineHeight;
+
+            if (hasValue)
+            {
+                GUI.Label(buttonRect, m_ValueType.FullName, EditorStyles.popup);
+            }
+            else
+            {
+                GUI.Label(buttonRect, "Null", EditorStyles.popup);
+            }
+
+            if (Event.current.type == EventType.MouseDown && buttonRect.Contains(Event.current.mousePosition))
+            {
+                ShowTypeOptions();
+            }
+
             if (m_IsExpanded)
             {
                 EditorGUI.indentLevel++;
@@ -254,7 +255,7 @@ namespace ReflectedInspector
                 if (!types[i].IsAbstract && fieldInfo.FieldType.IsAssignableFrom(types[i]))
                 {
                     Type type = types[i];
-                    typesMenu.AddItem(new GUIContent(types[i].Name), false, ()=> { AssignType(type); });
+                    typesMenu.AddItem(new GUIContent(types[i].Name), false, () => { AssignType(type); });
                 }
             }
 
@@ -268,11 +269,11 @@ namespace ReflectedInspector
         /// <param name="type"></param>
         public void AssignType(Type type)
         {
-            if(!hasValue)
+            if (!hasValue)
             {
                 CreateNewInstanceOfType(type);
             }
-            else if( type != m_ValueType )
+            else if (type != m_ValueType)
             {
                 ConvertType(type);
             }
@@ -299,6 +300,8 @@ namespace ReflectedInspector
         /// <param name="newType">The type you want to convert too.</param>
         protected virtual void ConvertType(Type newType)
         {
+
+
             // Our new type is null so we don't need to convert.
             if (newType == null)
             {
@@ -310,6 +313,15 @@ namespace ReflectedInspector
             if (newType == m_ValueType)
             {
                 return;
+            }
+
+            // If we are down casting we can lose data so we want inform the user.
+            if(m_ValueType.IsSubclassOf(newType))
+            {
+                if (!EditorUtility.DisplayDialog("Down casting Type", "Do you really want to downcast '" + m_ValueType.Name + "' to it's base class '" + newType + "'? All inherited values will be kept but new values will be discarded.", "Down Cast", "Cancel"))
+                {
+                    return;
+                }
             }
 
             // We have not type assigned so we can just create a new one.
