@@ -77,11 +77,7 @@ namespace ReflectedInspector
         }
         public override void OnGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            {
-                vector3Value = EditorGUILayout.Vector3Field(memberName, m_Value);
-            }
-            EditorGUILayout.EndHorizontal();
+            vector3Value = EditorGUILayout.Vector3Field(memberName, m_Value);
         }
 
         /// <summary>
