@@ -74,14 +74,10 @@ namespace ReflectedInspector
         {
             get { return false; }
         }
+
         public override void OnGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            {
-                stringValue = EditorGUILayout.TextField(memberName, m_Value);
-                base.OnGUI();
-            }
-            EditorGUILayout.EndHorizontal();
+            stringValue = EditorGUILayout.TextField(memberName, m_Value);
         }
 
         /// <summary>
